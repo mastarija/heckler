@@ -43,8 +43,24 @@
 {
   padding: .25rem .5rem;
   text-align: left;
+  background: rgba( 0 , 0 , 0 , .05 );
+  border: 1px solid #dadada;
 }
 
+#heckler .hooks_table td
+{
+  width: 5rem;
+}
+
+#heckler .hooks_table td:first-child
+{
+  width: auto;
+}
+
+#heckler .hooks_table td:last-child
+{
+  width: 2.5rem;
+}
 
 #heckler .hooks_table input
 {
@@ -60,9 +76,21 @@
 }
 
 #heckler a.add ,
-#heckler a.remove
+#heckler a.del
 {
+  width: 100%;
+  height: 100%;
+  display: flex;
   text-decoration: none;
+  text-align: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+#heckler a.add .dashicons ,
+#heckler a.del .dashicons
+{
+  margin: 0 auto;
 }
 
 #heckler a.add
@@ -70,7 +98,8 @@
   color: green;
 }
 
-#heckler a.remove
+#heckler a.del
 {
   color: red;
 }
+

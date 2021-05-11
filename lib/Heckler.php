@@ -15,9 +15,44 @@ class Heckler
   static function init ()
   {
     add_action( 'init'                  , 'Heckler::make_post_type' );
+    add_action( 'init'                  , 'Heckler::hook_heck_data' );
     add_action( 'add_meta_boxes'        , 'Heckler::make_meta_data' );
     add_action( 'save_post_heckler'     , 'Heckler::save_meta_data' );
     add_action( 'admin_enqueue_scripts' , 'Heckler::load_root_srcs' );
+  }
+
+  static function hook_heck_data ()
+  {
+    $qargs =
+      [ 'post_type'       => 'heckler'
+      , 'post_status'     => 'publish'
+      , 'posts_per_page'  => -1
+      ];
+
+    $query = new WP_Query( $qargs );
+
+    foreach ( $query->posts as $post )
+    {
+      $auxfn = function ( $row ) { return explode( ':' , $row ); };
+
+      $hooks = get_post_meta( $post->ID , 'heckler_hooks' , true );
+      $hooks = !$hooks ? [] : array_map( $auxfn , explode( ',' , $hooks ) );
+
+      $displ = function () use ( $post )
+      {
+        echo apply_filters( 'the_content' , $post->post_content );
+      };
+
+      foreach ( $hooks as $hook )
+      {
+        if ( count( $hook ) !== 3 )
+        {
+          continue;
+        }
+
+        add_action( $hook[ 0 ] , $displ , $hook[ 1 ] );
+      }
+    }
   }
 
   static function make_post_type ()
@@ -113,19 +148,19 @@ class Heckler
         <?php foreach ( $hooks as $hook ) : ?>
         <tr>
           <td>
-            <input type="text" name="acts[]" value="<?php echo $hook[0]; ?>" />
+            <input type="text" name="acts[]" value="<?php echo $hook[0]; ?>" placeholder="<?php _e( 'new_hook' , 'heckler' ); ?>" />
           </td>
 
           <td>
-            <input type="number" name="ords[]" value="<?php echo $hook[1]; ?>" />
+            <input type="number" name="ords[]" value="<?php echo $hook[1]; ?>" placeholder="0" />
           </td>
 
           <td>
-            <input type="number" name="args[]" value="<?php echo $hook[2]; ?>" />
+            <input type="number" name="args[]" value="<?php echo $hook[2]; ?>" placeholder="0" />
           </td>
 
           <td>
-            <a href="#" class="remove" title="remove">
+            <a href="#" class="del" title="<?php _e( 'Delete' , 'heckler' ); ?>">
               <span class="dashicons dashicons-dismiss"></span>
             </a>
           </td>
@@ -136,7 +171,7 @@ class Heckler
       <tfoot>
         <tr>
           <td>
-            <input type="text" name="acts[]" placeholder="new_hook" />
+            <input type="text" name="acts[]" placeholder="<?php _e( 'new_hook' , 'heckler' ); ?>" />
           </td>
 
           <td>
@@ -148,7 +183,7 @@ class Heckler
           </td>
 
           <td>
-            <a href="#" class="add" title="add">
+            <a href="#" class="add" title="<?php _e( 'Add' , 'heckler' ); ?>">
               <span class="dashicons dashicons-plus-alt"></span>
             </a>
           </td>
