@@ -195,6 +195,18 @@ class Heckler
     <?php
   }
 
+  static function load_hook_data ( $post_id )
+  {
+    $hooks = get_post_meta( $post->ID , 'heckler_hooks' , true );
+
+    if ( !$hooks )
+    {
+      return;
+    }
+
+
+  }
+
   static function load_root_srcs ()
   {
     $screen = get_current_screen();
@@ -204,8 +216,8 @@ class Heckler
       return;
     }
 
-    HeckAux::load_jsc( 'heckler_jsc' , 'jsc/heckler.js' );
-    HeckAux::load_css( 'heckler_css' , 'css/heckler.css' );
+    HeckAux::load_jsc( 'heckler_jsc' , 'jsc/heckler.js'  , [ 'wp-codemirror' ] );
+    HeckAux::load_css( 'heckler_css' , 'css/heckler.css' , [ 'wp-codemirror' ] );
   }
 
   static function post_list ( $name )
