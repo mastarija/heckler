@@ -9,7 +9,7 @@
   Plugin Name: Heckler
   Text Domain: heckler
   Domain Path: languages
-  Description: Used for creating reusable pieces of text or code and displaying them on specified hooks or as a short code.
+  Description: Output custom reusable pieces of text or code on any action hook.
 */
 
 if ( !defined( 'ABSPATH' ) )
@@ -17,9 +17,6 @@ if ( !defined( 'ABSPATH' ) )
   return;
 }
 
-define( 'HECKLER_FILE' , __FILE__ );
-
-require_once 'lib/Heckler.php';
-require_once 'lib/HeckAux.php';
+require_once 'lib/heckler.php';
 
 Heckler::init();

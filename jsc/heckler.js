@@ -1,31 +1,27 @@
 ! function ( $ )
 {
-  var main = document.querySelector( '#heckler .hooks_table tbody' )
-  var nrow = document.querySelector( '#heckler .hooks_table tfoot tr' )
-  var vals = !nrow ? false : Array.from( nrow.querySelectorAll( 'input' ) )
+  var hook = document.querySelector( '#heckler-hook tbody' )
 
-  if ( !main || !nrow || !vals )
+  editor( document.getElementById( 'heckler-rule-editor' ) )
+  editor( document.getElementById( 'heckler-code-editor' ) )
+
+  $( document ).on( 'click' , 'tbody .heckler-hook-kill span' , remove )
+  $( document ).on( 'click' , 'tfoot .heckler-hook-kill span' , create )
+
+  function remove ( $evnt )
   {
-    return
+    $( this ).closest( 'tr' ).remove()
   }
 
-  $( document ).on( 'click' , '#heckler .add' , add_handler )
-  $( document ).on( 'click' , '#heckler .del' , del_handler )
-
-  function add_handler ( e )
+  function create ( $evnt )
   {
-    var copy = nrow.cloneNode( true )
-    var butn = copy.querySelector( '.add' )
-        butn.classList.add( 'del' )
-        butn.classList.remove( 'add' )
-
-    main.appendChild( copy )
-    vals.forEach( f => f.value = '' )
+    $( this ).closest( 'tr' ).clone().appendTo( hook )
+    $( this ).closest( 'tr' ).find( 'input' ).val( '' )
   }
 
-  function del_handler ( e )
+  function editor ( $elem )
   {
-    e.preventDefault()
-    this.parentNode.parentNode.remove()
+    var opts = { mode : 'text/x-php' , keyMap : 'vim' , lineNumbers : true }
+    return wp.CodeMirror.fromTextArea( $elem , opts )
   }
 } ( jQuery )
