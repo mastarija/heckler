@@ -225,14 +225,9 @@ class Heckler
     $rule_conf = Helpers::mend_bol( Helpers::meta_val( $post->ID , 'heckler_rule_conf' , false ) );
     $mode_conf = Helpers::mend_txt( Helpers::meta_val( $post->ID , 'heckler_mode_conf' , 'text' ) );
 
-    if ( $rule_conf )
+    if ( $rule_conf && !self::exec_rule( $post->ID ) )
     {
-      $rule = Helpers::mend_txt( Helpers::meta_val( $post->ID , 'heckler_rule_meta' , '' ) );
-
-      if ( empty( $rule ) || !eval( $rule ) )
-      {
-        return;
-      }
+      return;
     }
 
     switch ( $mode_conf ) {
@@ -241,15 +236,8 @@ class Heckler
         break;
 
       case 'code':
-        $code = Helpers::mend_txt( Helpers::meta_val( $post->ID , 'heckler_code_meta' , '' ) );
-
-        if ( empty( $code ) )
-        {
-          return;
-        }
-
         ob_start();
-        eval( $code );
+        self::make_code( $post->ID )();
         return ob_get_clean();
         break;
 
@@ -317,5 +305,35 @@ class Heckler
   public static function load_code_file ( $post_id , $def = '' )
   {
     return self::load_user_file( $post_id , $def , 'code' );
+  }
+
+  public static function exec_rule ( $post_id )
+  {
+    $file = plugin_dir_path( __DIR__ ) . "usr/rule_{$post_id}.php";
+
+    if ( !file_exists( $file ) )
+    {
+      return false;
+    }
+
+    include $file;
+  }
+
+  public static function make_code ( $post_id )
+  {
+    $file = plugin_dir_path( __DIR__ ) . "usr/code_{$post_id}.php";
+
+    if ( !file_exists( $file ) )
+    {
+      return function ( ...$args )
+      {
+
+      };
+    }
+
+    return function ( ...$args ) use ( $file )
+    {
+      include $file;
+    };
   }
 }
