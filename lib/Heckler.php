@@ -19,6 +19,8 @@ class Heckler
     add_action( 'save_post_heckler'     , 'Heckler::save_hook_meta' );
     add_action( 'save_post_heckler'     , 'Heckler::save_rule_meta' );
     add_action( 'save_post_heckler'     , 'Heckler::save_code_meta' );
+
+    add_shortcode( 'heckler' , 'Heckler::make_shortcode' );
   }
 
   public static function make_post_type ()
@@ -90,10 +92,20 @@ class Heckler
     foreach ( explode( ',' , get_post_meta( $post->ID , 'heckler_hook_meta' , true ) ) as $hraw )
     {
       $hook = explode( ':' , $hraw );
+
+      $name = isset( $hook[ 0 ] ) ? Helpers::mend_txt( $hook[ 0 ] ) : '';
+      $args = isset( $hook[ 1 ] ) ? Helpers::mend_num( $hook[ 1 ] ) : 0;
+      $sort = isset( $hook[ 2 ] ) ? Helpers::mend_num( $hook[ 2 ] ) : 0;
+
+      if ( empty( $name ) )
+      {
+        continue;
+      }
+
       $data[ 'hooks' ][] =
-        [ 'name' => isset( $hook[ 0 ] ) ? Helpers::mend_txt( $hook[ 0 ] ) : ''
-        , 'args' => isset( $hook[ 1 ] ) ? Helpers::mend_num( $hook[ 1 ] ) : 0
-        , 'sort' => isset( $hook[ 2 ] ) ? Helpers::mend_num( $hook[ 2 ] ) : 0
+        [ 'name' => $name
+        , 'args' => $args
+        , 'sort' => $sort
         ];
     }
 
@@ -187,9 +199,62 @@ class Heckler
     update_post_meta( $post_id , 'heckler_code_meta' , $rule );
   }
 
-  public static function make_shortcode ()
+  public static function make_shortcode ( $att , $con , $tag )
   {
+    $def =
+      [ 'id'    => 0
+      , 'data'  => ''
+      ];
 
+    $att = shortcode_atts( $def , $att , $tag );
+
+    if ( !isset( $att[ 'id' ] ) || empty( $att[ 'id' ] ) )
+    {
+      return;
+    }
+
+    $post = get_post( $att[ 'id' ] );
+
+    if ( !$post )
+    {
+      return;
+    }
+
+    $rule_conf = Helpers::mend_bol( Helpers::meta_val( $post->ID , 'heckler_rule_conf' , false ) );
+    $mode_conf = Helpers::mend_txt( Helpers::meta_val( $post->ID , 'heckler_mode_conf' , 'text' ) );
+
+    if ( $rule_conf )
+    {
+      $rule = Helpers::mend_txt( Helpers::meta_val( $post->ID , 'heckler_rule_meta' , '' ) );
+
+      if ( empty( $rule ) || !eval( $rule ) )
+      {
+        return;
+      }
+    }
+
+    switch ( $mode_conf ) {
+      case 'text':
+        return apply_filters( 'the_content', $post->post_content );
+        break;
+
+      case 'code':
+        $code = Helpers::mend_txt( Helpers::meta_val( $post->ID , 'heckler_code_meta' , '' ) );
+
+        if ( empty( $code ) )
+        {
+          return;
+        }
+
+        ob_start();
+        eval( $code );
+        return ob_get_clean();
+        break;
+
+      default:
+        return;
+        break;
+    }
   }
 
   public static function load_main_srcs ()
