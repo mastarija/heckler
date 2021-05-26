@@ -9,6 +9,8 @@ require_once 'helpers.php';
 
 class Heckler
 {
+  public const php_header = "<?php if ( !defined( 'ABSPATH' ) ) return;\n";
+
   public static function init ()
   {
     add_action( 'init'                  , 'Heckler::make_post_type' );
@@ -65,7 +67,7 @@ class Heckler
   public static function view_rule_meta ( $post )
   {
     $data =
-      [ 'rule' => Helpers::meta_val( $post->ID , 'heckler_rule_meta' , 'return true;' )
+      [ 'rule' => self::load_rule_file( $post->ID , 'return true;' )
       , 'nonce' => wp_nonce_field( 'nonc_save_rule_meta' , 'nonc_save_rule_meta' , true , false )
       ];
 
@@ -75,7 +77,7 @@ class Heckler
   public static function view_code_meta ( $post )
   {
     $data =
-      [ 'code' => Helpers::meta_val( $post->ID , 'heckler_code_meta' , 'echo "Hello world!";' )
+      [ 'code' => self::load_code_file( $post->ID , 'echo "Hello world!";' )
       , 'nonce' => wp_nonce_field( 'nonc_save_code_meta' , 'nonc_save_code_meta' , true , false )
       ];
 
@@ -184,19 +186,19 @@ class Heckler
       return;
     }
 
-    update_post_meta( $post_id , 'heckler_rule_meta' , $rule );
+    self::save_rule_file( $post_id , $rule );
   }
 
   public static function save_code_meta ( $post_id )
   {
-    $rule = Helpers::post_val( 'heckler_code_meta' , '' );
+    $code = Helpers::post_val( 'heckler_code_meta' , '' );
 
     if ( !self::save_cond( $post_id , 'nonc_save_code_meta' ) )
     {
       return;
     }
 
-    update_post_meta( $post_id , 'heckler_code_meta' , $rule );
+    self::save_code_file( $post_id , $code );
   }
 
   public static function make_shortcode ( $att , $con , $tag )
@@ -278,5 +280,42 @@ class Heckler
     }
 
     require Helpers::plug_dir() . $file;
+  }
+
+  public static function save_user_file ( $post_id , $code , $type )
+  {
+    $path = plugin_dir_path( __DIR__ ) . "usr/{$type}_{$post_id}.php";
+    $file = fopen( $path , 'w' );
+    fwrite( $file , self::php_header . stripslashes( $code ) );
+    fclose( $file );
+  }
+
+  public static function save_rule_file ( $post_id , $rule )
+  {
+    self::save_user_file( $post_id , $rule , 'rule' );
+  }
+
+  public static function save_code_file ( $post_id , $code )
+  {
+    self::save_user_file( $post_id , $code , 'code' );
+  }
+
+  public static function load_user_file ( $post_id , $def = '' , $type )
+  {
+    $path = plugin_dir_path( __DIR__ ) . "usr/{$type}_{$post_id}.php";
+    $file = file_exists( $path ) ? file_get_contents( $path ) : $def;
+    $temp = substr( $file , 0 , strlen( self::php_header ) );
+    $file = ( $temp == self::php_header ) ? substr( $file , strlen( self::php_header ) ) : $file;
+    return $file;
+  }
+
+  public static function load_rule_file ( $post_id , $def = '' )
+  {
+    return self::load_user_file( $post_id , $def , 'rule' );
+  }
+
+  public static function load_code_file ( $post_id , $def = '' )
+  {
+    return self::load_user_file( $post_id , $def , 'code' );
   }
 }
