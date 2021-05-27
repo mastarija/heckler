@@ -14,6 +14,7 @@ class Heckler
   public static function init ()
   {
     add_action( 'init'                  , 'Heckler::make_post_type' );
+    add_action( 'init'                  , 'Heckler::init_hook_code' );
     add_action( 'add_meta_boxes'        , 'Heckler::make_meta_boxs' );
     add_action( 'admin_enqueue_scripts' , 'Heckler::load_main_srcs' );
 
@@ -23,6 +24,47 @@ class Heckler
     add_action( 'save_post_heckler'     , 'Heckler::save_code_meta' );
 
     add_shortcode( 'heckler' , 'Heckler::make_shortcode' );
+  }
+
+  public static function init_hook_code ()
+  {
+    $qargs =
+      [ 'post_type'       => 'heckler'
+      , 'post_status'     => 'publish'
+      , 'posts_per_page'  => -1
+      ];
+
+    $query = new WP_Query( $qargs );
+
+    foreach ( $query->posts as $post )
+    {
+      $hooks = self::load_hook_meta( $post->ID );
+
+      $rule_conf = Helpers::meta_val( $post->ID , 'heckler_rule_conf' , false );
+      $mode_conf = Helpers::meta_val( $post->ID , 'heckler_mode_conf' , 'text' );
+
+      if ( $rule_conf && !self::exec_rule( $post->ID ) )
+      {
+        continue;
+      }
+
+      $action = null;
+
+      switch ( $mode_conf ) {
+        case 'text':
+          $action = function ( ...$args ) use ( $post ) { echo apply_filters( 'the_content', $post->post_content ); };
+          break;
+
+        case 'code':
+          $action = self::make_code( $post->ID );
+          break;
+      }
+
+      foreach ( $hooks as $hook )
+      {
+        add_action( $hook[ 'name' ] , $action , $hook[ 'sort' ] , $hook[ 'args' ] );
+      }
+    }
   }
 
   public static function make_post_type ()
@@ -39,6 +81,16 @@ class Heckler
       , 'rewrite'               => false
       , 'supports'              => [ 'title' , 'editor' ]
       , 'menu_icon'             => 'dashicons-excerpt-view'
+      , 'capabilities'          =>
+        [ 'edit_post'          => 'update_core'
+        , 'read_post'          => 'update_core'
+        , 'delete_post'        => 'update_core'
+        , 'edit_posts'         => 'update_core'
+        , 'edit_others_posts'  => 'update_core'
+        , 'delete_posts'       => 'update_core'
+        , 'publish_posts'      => 'update_core'
+        , 'read_private_posts' => 'update_core'
+        ]
       ];
 
     register_post_type( $slug , $args );
@@ -84,14 +136,11 @@ class Heckler
     self::load_view_file( 'vue/code_meta.php' , $data );
   }
 
-  public static function view_hook_meta ( $post )
+  public static function load_hook_meta ( $post_id )
   {
-    $data =
-      [ 'hooks' => []
-      , 'nonce' => wp_nonce_field( 'nonc_save_hook_meta' , 'nonc_save_hook_meta' , true , false )
-      ];
+    $hooks = [];
 
-    foreach ( explode( ',' , get_post_meta( $post->ID , 'heckler_hook_meta' , true ) ) as $hraw )
+    foreach ( explode( ',' , get_post_meta( $post_id , 'heckler_hook_meta' , true ) ) as $hraw )
     {
       $hook = explode( ':' , $hraw );
 
@@ -104,12 +153,22 @@ class Heckler
         continue;
       }
 
-      $data[ 'hooks' ][] =
+      $hooks[] =
         [ 'name' => $name
         , 'args' => $args
         , 'sort' => $sort
         ];
     }
+
+    return $hooks;
+  }
+
+  public static function view_hook_meta ( $post )
+  {
+    $data =
+      [ 'hooks' => self::load_hook_meta( $post->ID )
+      , 'nonce' => wp_nonce_field( 'nonc_save_hook_meta' , 'nonc_save_hook_meta' , true , false )
+      ];
 
     self::load_view_file( 'vue/hook_meta.php' , $data );
   }
@@ -316,7 +375,7 @@ class Heckler
       return false;
     }
 
-    include $file;
+    return include $file;
   }
 
   public static function make_code ( $post_id )
