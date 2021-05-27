@@ -17,6 +17,9 @@ if ( !defined( 'ABSPATH' ) )
   return;
 }
 
+define( 'HECKLER_DIR' , wp_normalize_path( __DIR__ . '/' ) );
+define( 'HECKLER_FILE' , wp_normalize_path( __FILE__ ) );
+
 require_once 'lib/heckler.php';
 
 Heckler::init();

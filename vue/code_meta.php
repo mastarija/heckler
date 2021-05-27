@@ -14,5 +14,5 @@ if ( !defined( 'ABSPATH' ) )
     <footer><pre>}</pre></footer>
   </div>
 
-  <?php echo $nonce; ?>
+  <?php echo $nonc; ?>
 </div>

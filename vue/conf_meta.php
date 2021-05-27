@@ -56,5 +56,5 @@ if ( !defined( 'ABSPATH' ) )
     </tr>
   </table>
 
-  <?php echo $nonce; ?>
+  <?php echo $nonc; ?>
 </div>

@@ -26,12 +26,68 @@ class Heckler
     add_shortcode( 'heckler' , 'Heckler::make_shortcode' );
   }
 
+  public static function make_shortcode ( $att , $con , $tag )
+  {
+    $def =
+      [ 'id'    => 0
+      , 'data'  => ''
+      ];
+
+    $att = shortcode_atts( $def , $att , $tag );
+
+    if ( !isset( $att[ 'id' ] ) || empty( $att[ 'id' ] ) )
+    {
+      return;
+    }
+
+    $post = get_post( $att[ 'id' ] );
+
+    if ( !$post )
+    {
+      return;
+    }
+
+    $rule_conf = Helpers::mend_bol( Helpers::meta_val( $post->ID , 'heckler_rule_conf' , false ) );
+    $mode_conf = Helpers::mend_txt( Helpers::meta_val( $post->ID , 'heckler_mode_conf' , 'text' ) );
+
+    if ( $rule_conf && !self::exec_rule( $post->ID ) )
+    {
+      return;
+    }
+
+    switch ( $mode_conf ) {
+      case 'text':
+        return apply_filters( 'the_content', $post->post_content );
+        break;
+
+      case 'code':
+        ob_start();
+        self::make_code( $post->ID )();
+        return ob_get_clean();
+        break;
+
+      default:
+        return;
+        break;
+    }
+  }
+
   public static function init_hook_code ()
   {
     $qargs =
       [ 'post_type'       => 'heckler'
       , 'post_status'     => 'publish'
       , 'posts_per_page'  => -1
+      , 'meta_query'      =>
+        [ 'relation' => 'AND'
+        , [ 'key' => 'heckler_hook_meta'
+          , 'compare' => 'EXISTS'
+          ]
+        , [ 'key' => 'heckler_hook_meta'
+          , 'compare' => '!='
+          , 'value' => ''
+          ]
+        ]
       ];
 
     $query = new WP_Query( $qargs );
@@ -110,78 +166,10 @@ class Heckler
       [ 'hcid' => $post->ID
       , 'rule' => Helpers::meta_val( $post->ID , 'heckler_rule_conf' , false )
       , 'mode' => Helpers::meta_val( $post->ID , 'heckler_mode_conf' , 'text' )
-      , 'nonce' => wp_nonce_field( 'nonc_save_conf_meta' , 'nonc_save_conf_meta' , true , false )
+      , 'nonc' => wp_nonce_field( 'nonc_save_conf_meta' , 'nonc_save_conf_meta' , true , false )
       ];
 
     self::load_view_file( 'vue/conf_meta.php' , $data );
-  }
-
-  public static function view_rule_meta ( $post )
-  {
-    $data =
-      [ 'rule' => self::load_rule_file( $post->ID , 'return true;' )
-      , 'nonce' => wp_nonce_field( 'nonc_save_rule_meta' , 'nonc_save_rule_meta' , true , false )
-      ];
-
-    self::load_view_file( 'vue/rule_meta.php' , $data );
-  }
-
-  public static function view_code_meta ( $post )
-  {
-    $data =
-      [ 'code' => self::load_code_file( $post->ID , 'echo "Hello world!";' )
-      , 'nonce' => wp_nonce_field( 'nonc_save_code_meta' , 'nonc_save_code_meta' , true , false )
-      ];
-
-    self::load_view_file( 'vue/code_meta.php' , $data );
-  }
-
-  public static function load_hook_meta ( $post_id )
-  {
-    $hooks = [];
-
-    foreach ( explode( ',' , get_post_meta( $post_id , 'heckler_hook_meta' , true ) ) as $hraw )
-    {
-      $hook = explode( ':' , $hraw );
-
-      $name = isset( $hook[ 0 ] ) ? Helpers::mend_txt( $hook[ 0 ] ) : '';
-      $args = isset( $hook[ 1 ] ) ? Helpers::mend_num( $hook[ 1 ] ) : 0;
-      $sort = isset( $hook[ 2 ] ) ? Helpers::mend_num( $hook[ 2 ] ) : 0;
-
-      if ( empty( $name ) )
-      {
-        continue;
-      }
-
-      $hooks[] =
-        [ 'name' => $name
-        , 'args' => $args
-        , 'sort' => $sort
-        ];
-    }
-
-    return $hooks;
-  }
-
-  public static function view_hook_meta ( $post )
-  {
-    $data =
-      [ 'hooks' => self::load_hook_meta( $post->ID )
-      , 'nonce' => wp_nonce_field( 'nonc_save_hook_meta' , 'nonc_save_hook_meta' , true , false )
-      ];
-
-    self::load_view_file( 'vue/hook_meta.php' , $data );
-  }
-
-  public static function save_cond ( $post_id , $nonce )
-  {
-    $nonce_value = isset( $_POST[ $nonce ] ) ? $_POST[ $nonce ] : false;
-
-    $is_autosave = wp_is_post_autosave( $post_id );
-    $is_revision = wp_is_post_revision( $post_id );
-    $valid_nonce = $nonce_value && wp_verify_nonce( $nonce_value , $nonce );
-
-    return !$is_autosave && !$is_revision && $valid_nonce;
   }
 
   public static function save_conf_meta ( $post_id )
@@ -201,6 +189,60 @@ class Heckler
 
     update_post_meta( $post_id , 'heckler_rule_conf' , $rule );
     update_post_meta( $post_id , 'heckler_mode_conf' , $mode );
+  }
+
+  public static function view_rule_meta ( $post )
+  {
+    $data =
+      [ 'rule' => self::load_user_file( $post->ID , 'return true;' , 'rule' )
+      , 'nonc' => wp_nonce_field( 'nonc_save_rule_meta' , 'nonc_save_rule_meta' , true , false )
+      ];
+
+    self::load_view_file( 'vue/rule_meta.php' , $data );
+  }
+
+  public static function save_rule_meta ( $post_id )
+  {
+    $rule = Helpers::post_val( 'heckler_rule_meta' , '' );
+
+    if ( !self::save_cond( $post_id , 'nonc_save_rule_meta' ) )
+    {
+      return;
+    }
+
+    self::save_user_file( $post_id , $rule , 'rule' );
+  }
+
+  public static function view_code_meta ( $post )
+  {
+    $data =
+      [ 'code' => self::load_user_file( $post->ID , 'echo "Hello world!";' , 'code' )
+      , 'nonc' => wp_nonce_field( 'nonc_save_code_meta' , 'nonc_save_code_meta' , true , false )
+      ];
+
+    self::load_view_file( 'vue/code_meta.php' , $data );
+  }
+
+  public static function save_code_meta ( $post_id )
+  {
+    $code = Helpers::post_val( 'heckler_code_meta' , '' );
+
+    if ( !self::save_cond( $post_id , 'nonc_save_code_meta' ) )
+    {
+      return;
+    }
+
+    self::save_user_file( $post_id , $code , 'code' );
+  }
+
+  public static function view_hook_meta ( $post )
+  {
+    $data =
+      [ 'list' => self::load_hook_meta( $post->ID )
+      , 'nonc' => wp_nonce_field( 'nonc_save_hook_meta' , 'nonc_save_hook_meta' , true , false )
+      ];
+
+    self::load_view_file( 'vue/hook_meta.php' , $data );
   }
 
   public static function save_hook_meta ( $post_id )
@@ -233,77 +275,45 @@ class Heckler
       $list[] = implode( ':' , $row );
     }
 
-    update_post_meta( $post_id , 'heckler_hook_meta' , implode( ',' , $list ) );
+    update_post_meta( $post_id , 'heckler_hook_meta' , trim( implode( ',' , $list ) ) );
   }
 
-  public static function save_rule_meta ( $post_id )
+  public static function save_cond ( $post_id , $nonce )
   {
-    $rule = Helpers::post_val( 'heckler_rule_meta' , '' );
+    $nonce_value = isset( $_POST[ $nonce ] ) ? $_POST[ $nonce ] : false;
 
-    if ( !self::save_cond( $post_id , 'nonc_save_rule_meta' ) )
-    {
-      return;
-    }
+    $is_autosave = wp_is_post_autosave( $post_id );
+    $is_revision = wp_is_post_revision( $post_id );
+    $valid_nonce = $nonce_value && wp_verify_nonce( $nonce_value , $nonce );
 
-    self::save_rule_file( $post_id , $rule );
+    return !$is_autosave && !$is_revision && $valid_nonce;
   }
 
-  public static function save_code_meta ( $post_id )
+  public static function load_hook_meta ( $post_id )
   {
-    $code = Helpers::post_val( 'heckler_code_meta' , '' );
+    $hooks = [];
 
-    if ( !self::save_cond( $post_id , 'nonc_save_code_meta' ) )
+    foreach ( explode( ',' , get_post_meta( $post_id , 'heckler_hook_meta' , true ) ) as $hraw )
     {
-      return;
+      $hook = explode( ':' , $hraw );
+
+      $name = isset( $hook[ 0 ] ) ? Helpers::mend_txt( $hook[ 0 ] ) : '';
+      $args = isset( $hook[ 1 ] ) ? Helpers::mend_num( $hook[ 1 ] ) : 0;
+      $sort = isset( $hook[ 2 ] ) ? Helpers::mend_num( $hook[ 2 ] ) : 0;
+
+      if ( empty( $name ) )
+      {
+        continue;
+      }
+
+      $hooks[] =
+        [ 'name' => $name
+        , 'args' => $args
+        , 'sort' => $sort
+        ];
     }
 
-    self::save_code_file( $post_id , $code );
-  }
-
-  public static function make_shortcode ( $att , $con , $tag )
-  {
-    $def =
-      [ 'id'    => 0
-      , 'data'  => ''
-      ];
-
-    $att = shortcode_atts( $def , $att , $tag );
-
-    if ( !isset( $att[ 'id' ] ) || empty( $att[ 'id' ] ) )
-    {
-      return;
-    }
-
-    $post = get_post( $att[ 'id' ] );
-
-    if ( !$post )
-    {
-      return;
-    }
-
-    $rule_conf = Helpers::mend_bol( Helpers::meta_val( $post->ID , 'heckler_rule_conf' , false ) );
-    $mode_conf = Helpers::mend_txt( Helpers::meta_val( $post->ID , 'heckler_mode_conf' , 'text' ) );
-
-    if ( $rule_conf && !self::exec_rule( $post->ID ) )
-    {
-      return;
-    }
-
-    switch ( $mode_conf ) {
-      case 'text':
-        return apply_filters( 'the_content', $post->post_content );
-        break;
-
-      case 'code':
-        ob_start();
-        self::make_code( $post->ID )();
-        return ob_get_clean();
-        break;
-
-      default:
-        return;
-        break;
-    }
+    return $hooks;
   }
 
   public static function load_main_srcs ()
@@ -315,8 +325,21 @@ class Heckler
       return;
     }
 
-    Helpers::load_jsc( 'heckler_jsc' , 'jsc/heckler.js'  , [ 'jquery' , 'wp-codemirror' ] );
-    Helpers::load_css( 'heckler_css' , 'css/heckler.css' , [ 'wp-codemirror' ] );
+    wp_enqueue_script
+      ( 'heckler_jsc'
+      , plugins_url( 'jsc/heckler.js' , HECKLER_FILE )
+      , [ 'jquery' , 'wp-codemirror' ]
+      , 0
+      , true
+      );
+
+    wp_enqueue_style
+      ( 'heckler_css'
+      , plugins_url( 'css/heckler.css' , HECKLER_FILE )
+      , [ 'wp-codemirror' ]
+      , 0
+      , 'all'
+      );
   }
 
   public static function load_view_file ( $file , $data = [] )
@@ -326,49 +349,34 @@ class Heckler
       extract( $data );
     }
 
-    require Helpers::plug_dir() . $file;
+    require HECKLER_DIR . $file;
   }
 
   public static function save_user_file ( $post_id , $code , $type )
   {
-    $path = plugin_dir_path( __DIR__ ) . "usr/{$type}_{$post_id}.php";
+    $path = self::make_user_path( $post_id , $type );
     $file = fopen( $path , 'w' );
     fwrite( $file , self::php_header . stripslashes( $code ) );
     fclose( $file );
   }
 
-  public static function save_rule_file ( $post_id , $rule )
-  {
-    self::save_user_file( $post_id , $rule , 'rule' );
-  }
-
-  public static function save_code_file ( $post_id , $code )
-  {
-    self::save_user_file( $post_id , $code , 'code' );
-  }
-
   public static function load_user_file ( $post_id , $def = '' , $type )
   {
-    $path = plugin_dir_path( __DIR__ ) . "usr/{$type}_{$post_id}.php";
+    $path = self::make_user_path( $post_id , $type );
     $file = file_exists( $path ) ? file_get_contents( $path ) : $def;
     $temp = substr( $file , 0 , strlen( self::php_header ) );
     $file = ( $temp == self::php_header ) ? substr( $file , strlen( self::php_header ) ) : $file;
     return $file;
   }
 
-  public static function load_rule_file ( $post_id , $def = '' )
+  public static function make_user_path ( $post_id , $type )
   {
-    return self::load_user_file( $post_id , $def , 'rule' );
-  }
-
-  public static function load_code_file ( $post_id , $def = '' )
-  {
-    return self::load_user_file( $post_id , $def , 'code' );
+    return HECKLER_DIR . "usr/{$type}_{$post_id}.php";
   }
 
   public static function exec_rule ( $post_id )
   {
-    $file = plugin_dir_path( __DIR__ ) . "usr/rule_{$post_id}.php";
+    $file = self::make_user_path( $post_id , $rule );
 
     if ( !file_exists( $file ) )
     {
@@ -380,13 +388,13 @@ class Heckler
 
   public static function make_code ( $post_id )
   {
-    $file = plugin_dir_path( __DIR__ ) . "usr/code_{$post_id}.php";
+    $file = self::make_user_path( $post_id , 'code' );
 
     if ( !file_exists( $file ) )
     {
       return function ( ...$args )
       {
-
+        // a noop
       };
     }
 

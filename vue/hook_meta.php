@@ -19,7 +19,7 @@ if ( !defined( 'ABSPATH' ) )
     </thead>
 
     <tbody>
-      <?php foreach ( $hooks as $hook ): ?>
+      <?php foreach ( $list as $hook ): ?>
         <?php row ( $hook[ 'name' ] , $hook[ 'args' ] , $hook[ 'sort' ] ); ?>
       <?php endforeach ?>
     </tbody>
@@ -29,7 +29,7 @@ if ( !defined( 'ABSPATH' ) )
     </tfoot>
   </table>
 
-  <?php echo $nonce; ?>
+  <?php echo $nonc; ?>
 </div>
 
 <?php
