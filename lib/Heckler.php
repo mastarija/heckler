@@ -57,7 +57,7 @@ class Heckler
 
     switch ( $mode_conf ) {
       case 'text':
-        return apply_filters( 'the_content', $post->post_content );
+        return self::make_text( $post , false )();
         break;
 
       case 'code':
@@ -108,7 +108,7 @@ class Heckler
 
       switch ( $mode_conf ) {
         case 'text':
-          $action = function ( ...$args ) use ( $post ) { echo apply_filters( 'the_content', $post->post_content ); };
+          $action = self::make_text( $post , true );
           break;
 
         case 'code':
@@ -123,6 +123,45 @@ class Heckler
     }
   }
 
+  public static function make_text ( $post , $echo = false )
+  {
+    if ( did_action( 'elementor/loaded' ) && Elementor\Plugin::$instance->db->is_built_with_elementor( $post->ID ) )
+    {
+      return function ( ...$args ) use ( $post , $echo )
+      {
+        $val = Elementor\Plugin::$instance->frontend->get_builder_content_for_display( $post->ID , false );
+
+        if ( $echo )
+        {
+          echo $val;
+        }
+
+        else
+        {
+          return $val;
+        }
+      };
+    }
+
+    else
+    {
+      return function ( ...$args ) use ( $post , $echo )
+      {
+        $val = apply_filters( 'the_content' , get_the_content( null , false , $post ) );
+
+        if ( $echo )
+        {
+          echo $val;
+        }
+
+        else
+        {
+          return $val;
+        }
+      };
+    }
+  }
+
   public static function make_post_type ()
   {
     $slug = 'heckler';
@@ -134,6 +173,7 @@ class Heckler
       , 'show_ui'               => true
       , 'show_in_menu'          => true
 
+      , 'public'                => true
       , 'rewrite'               => false
       , 'supports'              => [ 'title' , 'editor' ]
       , 'menu_icon'             => 'dashicons-excerpt-view'
