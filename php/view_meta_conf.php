@@ -8,6 +8,19 @@
   </tr>
 
   <tr>
+    <td>Hook</td>
+    <td>
+      <label for="hook_on">On</label>
+      <input id="hook_on" name="conf_hook" type="radio" value="true" <?php echo $conf_hook === true ? 'checked' : ''; ?> />
+
+      <br />
+
+      <label for="hook_off">Off</label>
+      <input id="hook_off" name="conf_hook" type="radio" value="false" <?php echo $conf_hook === false ? 'checked' : ''; ?> />
+    </td>
+  </tr>
+
+  <tr>
     <td>Rule</td>
     <td>
       <label for="rule_on">On</label>

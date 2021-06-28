@@ -19,32 +19,232 @@ if ( !defined( 'ABSPATH' ) )
   return;
 }
 
+require_once 'php/helper.php';
+
+////////////////////////////////////////////////////////////////////////////////
+
 init();
+
+////////////////////////////////////////////////////////////////////////////////
 
 class MODE
 {
   public const TEXT = 'TEXT';
   public const CODE = 'CODE';
 
-  public static function valid( $mode )
+  public static function valid ( $mode )
   {
     return in_array( $mode , [ self::TEXT , self::CODE ] );
   }
 }
 
+class TYPE
+{
+  const RULE = 'RULE';
+  const CODE = 'CODE';
+
+  public static function valid ( $type )
+  {
+    return in_array( $type , [ self::RULE , self::CODE ] );
+  }
+}
+
 class UTIL
 {
-  public const HEAD = '';
+  public const PATH = __DIR__;
+  public const HEAD = "<?php if ( !defined( 'ABSPATH' ) ) die( 'direct access not allowed' );\n\n";
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 function init ()
 {
+  $usr = make_path( '/usr' );
+
+  if ( !is_dir( $usr ) )
+  {
+    mkdir( $usr , 0755 );
+  }
+
   add_action( 'init'              , 'Mastarija\Heckler\make_post_type' );
+  add_action( 'init'              , 'Mastarija\Heckler\init_hook_code' );
+
   add_action( 'add_meta_boxes'    , 'Mastarija\Heckler\make_meta_view' );
 
   add_action( 'save_post_heckler' , 'Mastarija\Heckler\save_meta_conf' );
   add_action( 'save_post_heckler' , 'Mastarija\Heckler\save_meta_hook' );
+
+  add_action( 'save_post_heckler' , 'Mastarija\Heckler\save_meta_rule' );
+  add_action( 'save_post_heckler' , 'Mastarija\Heckler\save_meta_code' );
+
+  add_shortcode( 'heckler' , 'Mastarija\Heckler\make_shortcode' );
 }
+
+function init_hook_code ()
+{
+  $qargs =
+    [ 'post_type' => 'heckler'
+    , 'post_status' => 'publish'
+    , 'posts_per_page' => -1
+    , 'meta_query'      =>
+        [ 'relation' => 'AND'
+        , [ 'key' => 'mastarija_heckler_conf_hook'
+          , 'compare' => 'EXISTS'
+          ]
+        , [ 'key' => 'mastarija_heckler_conf_hook'
+          , 'compare' => '='
+          , 'value' => true
+          ]
+        , [ 'key' => 'mastarija_heckler_hook_list'
+          , 'compare' => 'EXISTS'
+          ]
+        , [ 'key' => 'mastarija_heckler_hook_list'
+          , 'compare' => '!='
+          , 'value' => ''
+          ]
+        ]
+    ];
+
+  $query = new \WP_Query( $qargs );
+
+
+  while ( $query->have_posts() )
+  {
+
+    $query->the_post();
+
+    $post_id = $query->post->ID;
+
+    $conf_rule = prep_bool( load_meta( $post_id , 'mastarija_heckler_conf_rule' , false      ) );
+    $conf_mode = prep_mode( load_meta( $post_id , 'mastarija_heckler_conf_mode' , MODE::TEXT ) );
+
+    if ( $conf_rule )
+    {
+      $rule_func = make_user_func( TYPE::RULE , $post_id );
+
+      if ( !$rule_func || !$rule_func() )
+      {
+        continue;
+      }
+    }
+
+    $hook_list = load_hook_list( $post_id );
+
+    if ( empty( $hook_list ) )
+    {
+      continue;
+    }
+
+    $action = false;
+
+    switch ( $conf_mode )
+    {
+      case MODE::TEXT :
+        $action = make_text_func( $post_id , true );
+        break;
+
+      case MODE::CODE :
+        $action = make_user_func( TYPE::CODE , $post_id );
+        break;
+    }
+
+    if ( !$action )
+    {
+      continue;
+    }
+
+    foreach ( $hook_list as $hook_item )
+    {
+      if ( !$hook_item[ 'act' ] )
+      {
+        continue;
+      }
+
+      add_action( $hook_item[ 'tag' ] , $action , $hook_item[ 'ord' ] , $hook_item[ 'arg' ] );
+    }
+  }
+
+  wp_reset_postdata();
+}
+
+function make_shortcode ( $att , $con , $tag )
+{
+  $def =
+    [ 'id'    => 0
+    , 'name'  => ''
+    , 'data'  => ''
+    ];
+
+  $att = shortcode_atts( $def , $att , $tag );
+
+  $id = trim( $att[ 'id' ] );
+  $name = trim( $att[ 'name' ] );
+  $data = trim( $att[ 'data' ] );
+
+  $has_id = !empty( $id );
+  $has_name = !empty( $name );
+
+  if ( $has_name )
+  {
+    ob_start();
+    do_action( $name , $data );
+    return ob_get_clean();
+  }
+
+  if ( !$has_id )
+  {
+    return;
+  }
+
+  $post = get_post( $id );
+
+  if ( !$post )
+  {
+    return;
+  }
+
+  $conf_rule = prep_bool( load_meta( $id , 'mastarija_heckler_conf_rule' , false      ) );
+  $conf_mode = prep_mode( load_meta( $id , 'mastarija_heckler_conf_mode' , MODE::TEXT ) );
+
+  if ( $conf_rule )
+  {
+    $rule_func = make_user_func( TYPE::RULE , $id );
+
+    if ( !$rule_func || !$rule_func() )
+    {
+      return;
+    }
+  }
+
+  switch ( $conf_mode ) {
+    case MODE::TEXT :
+      $text_func = make_text_func( $id );
+
+      if ( !$text_func )
+      {
+        return;
+      }
+
+      return $text_func();
+      break;
+
+    case MODE::CODE :
+      $code_func = make_user_func( TYPE::CODE , $id );
+
+      if ( !$code_func )
+      {
+        return;
+      }
+
+      ob_start();
+      $code_func();
+      return ob_get_clean();
+
+      break;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 function make_post_type ()
 {
@@ -66,6 +266,8 @@ function make_post_type ()
   register_post_type( $slug , $args );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 function make_meta_view ()
 {
   add_meta_box( 'mastarija-heckler-conf' , 'Conf' , 'Mastarija\Heckler\view_meta_conf' , 'heckler' , 'side'   , 'core' );
@@ -74,11 +276,14 @@ function make_meta_view ()
   add_meta_box( 'mastarija-heckler-code' , 'Code' , 'Mastarija\Heckler\view_meta_code' , 'heckler' , 'normal' , 'core' );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 function view_meta_conf ( $post )
 {
   $data =
     [ 'post'      => $post->ID
-    , 'nonc'      => wp_nonce_field( 'nonc_mastarija_heckler_save_meta_conf' , 'nonc_mastarija_heckler_save_meta_conf' , true , false )
+    , 'nonc'      => make_nonc( 'nonc_mastarija_heckler_save_meta_conf' )
+    , 'conf_hook' => prep_bool( load_meta( $post->ID , 'mastarija_heckler_conf_hook' , false ) )
     , 'conf_rule' => prep_bool( load_meta( $post->ID , 'mastarija_heckler_conf_rule' , false ) )
     , 'conf_mode' => prep_mode( load_meta( $post->ID , 'mastarija_heckler_conf_mode' , MODE::TEXT ) )
     ];
@@ -88,6 +293,7 @@ function view_meta_conf ( $post )
 
 function save_meta_conf ( $post_id )
 {
+  $conf_hook = prep_bool( post_data( 'conf_hook' , false ) );
   $conf_rule = prep_bool( post_data( 'conf_rule' , false ) );
   $conf_mode = prep_mode( post_data( 'conf_mode' , MODE::TEXT ) );
 
@@ -96,14 +302,17 @@ function save_meta_conf ( $post_id )
     return;
   }
 
+  update_post_meta( $post_id , 'mastarija_heckler_conf_hook' , $conf_hook );
   update_post_meta( $post_id , 'mastarija_heckler_conf_rule' , $conf_rule );
   update_post_meta( $post_id , 'mastarija_heckler_conf_mode' , $conf_mode );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 function view_meta_hook ( $post )
 {
   $data =
-    [ 'nonc'      => wp_nonce_field( 'nonc_mastarija_heckler_save_meta_hook' , 'nonc_mastarija_heckler_save_meta_hook' , true , false )
+    [ 'nonc'      => make_nonc( 'nonc_mastarija_heckler_save_meta_hook' )
     , 'hook_list' => load_hook_list( $post->ID )
     ];
 
@@ -135,61 +344,91 @@ function save_meta_hook ( $post_id )
 
     if ( is_null( $tag ) || is_null( $ord ) || is_null( $arg ) )
     {
-      make_note( 'Invalid Hook data!' , 'notice notice-error' );
       return;
     }
 
     $tag = prep_text( $tag );
     $ord = prep_numb( $ord );
     $arg = prep_numb( $arg );
-    $act = prep_bool( $act ) ? 1 : 0; // make bool serializable
+    $act = prep_bool( $act ) ? 1 : 0;
 
     if ( empty( $tag ) )
     {
-      // ignore empty entries
       continue;
     }
 
     if ( strpos( $tag , ':' ) || strpos( $tag , ';' ) )
     {
-      make_note( "The tag '{$tag}' should not contain <code>:</code> or <code>;</code> characters." , 'notice notice-error' );
       continue;
     }
 
     $hook_list_meta[] = implode( ':' , [ $tag , $ord , $arg , $act ] );
   }
 
-  update_post_meta( $post_id , 'mastarija_heckler_hook_list' , implode( ';' , $hook_list_meta ) );
+  update_post_meta( $post_id , 'mastarija_heckler_hook_list' , trim( implode( ';' , $hook_list_meta ) ) );
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 function view_meta_rule ( $post )
 {
+  $code_rule = load_code_file( make_path( "/usr/rule_{$post->ID}.php" ) );
+  $code_rule = $code_rule === false ? '' : htmlspecialchars( $code_rule );
+
   $data =
     [ 'post'      => $post->ID
-    , 'code_rule' => 'hello, I am a rule'
+    , 'nonc'      => make_nonc( 'nonc_mastarija_heckler_save_meta_rule' )
+    , 'code_rule' => $code_rule
     ];
 
   load_view_file( 'php/view_meta_rule.php' , $data );
 }
 
+function save_meta_rule ( $post_id )
+{
+  $code_rule = post_data( 'code_rule' , '' );
+
+  if ( !save_cond( $post_id , 'nonc_mastarija_heckler_save_meta_rule' ) )
+  {
+    return;
+  }
+
+  save_code_file( make_path( "/usr/rule_{$post_id}.php" ) , $code_rule );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 function view_meta_code ( $post )
 {
+  $code_code = load_code_file( make_path( "/usr/code_{$post->ID}.php" ) );
+  $code_code = $code_code === false ? '' : htmlspecialchars( $code_code );
+
   $data =
-    [ 'post' => $post->ID
-    , 'code_code' => 'hello, I am a code'
+    [ 'post'      => $post->ID
+    , 'nonc'      => make_nonc( 'nonc_mastarija_heckler_save_meta_code' )
+    , 'code_code' => $code_code
     ];
 
   load_view_file( 'php/view_meta_code.php' , $data );
 }
 
-function load_view_file ( $file , $data = [] )
+function save_meta_code ( $post_id )
 {
-  if ( is_array( $data ) && !empty( $data ) )
+  $code_code = post_data( 'code_code' , '' );
+
+  if ( !save_cond( $post_id , 'nonc_mastarija_heckler_save_meta_code' ) )
   {
-    extract( $data );
+    return;
   }
 
-  require $file;
+  save_code_file( make_path( "/usr/code_{$post_id}.php" ) , $code_code );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function make_nonc ( $name )
+{
+  return wp_nonce_field( $name , $name , true , false );
 }
 
 function load_meta ( $post_id , $key , $def )
@@ -227,50 +466,97 @@ function load_hook_list ( $post_id )
   return $hook_list;
 }
 
-function list_data ( $list , $name , $dval )
+function load_view_file ( $file , $data = [] )
 {
-  if ( !is_array( $list ) )
+  if ( is_array( $data ) && !empty( $data ) )
   {
-    return $dval;
+    extract( $data );
   }
 
-  return isset( $list[ $name ] ) ? $list[ $name ] : $dval;
+  require $file;
 }
 
-function post_data ( $name , $dval )
+function load_code_file ( $file )
 {
-  return list_data( $_POST , $name , $dval );
-}
+  $data = file_get_contents( $file );
 
-function prep_numb ( $value )
-{
-  return is_numeric( $value ) ? $value : 0;
-}
-
-function prep_bool ( $value )
-{
-  if ( is_string( $value ) )
+  if ( strpos( $data , UTIL::HEAD ) !== 0 )
   {
-    $value = strtolower( $value );
+    return false;
+  }
 
-    if ( in_array( $value , [ 'false' , '0' ] , true ) )
+  return substr( $data , strlen( UTIL::HEAD ) );
+}
+
+function save_code_file ( $file , $data = '' )
+{
+  file_put_contents( $file , UTIL::HEAD . $data );
+}
+
+function make_user_func ( $type , $post_id )
+{
+  $type = TYPE::valid( $type ) ? strtolower( $type ) : false;
+
+  if ( !$type )
+  {
+    return false;
+  }
+
+  $file = make_path( "/usr/{$type}_{$post_id}.php" );
+
+  if ( !file_exists( $file ) )
+  {
+    return false;
+  }
+
+  return function ( ...$args ) use ( $file )
+  {
+    return include $file;
+  };
+}
+
+function test_elementor ( $post_id )
+{
+  return did_action( 'elementor\loaded' ) && Elementor\Plugin::$instance->db->is_built_with_elementor( $post_id );
+}
+
+function make_text_func ( $post_id , $echo = false )
+{
+  $text = '';
+
+  $stat = get_post_status( $post_id );
+
+  if ( !$stat )
+  {
+    return false;
+  }
+
+  if ( test_elementor( $post_id ) )
+  {
+    $text = Elementor\Plugin::$instance->frontend->get_builder_content_for_display( $post_id , false );
+  }
+
+  else
+  {
+
+    $text = apply_filters( 'the_content' , get_the_content( null , false , $post_id ) );
+  }
+
+  if ( $echo )
+  {
+    return function ( ...$args ) use ( $text )
     {
-      $value = false;
-    }
+      echo $text;
+    };
   }
 
-  return (bool) $value;
+  return function ( ...$args ) use ( $text )
+  {
+    return $text;
+  };
 }
 
-function prep_text ( $value )
-{
-  return (string) sanitize_text_field( $value );
-}
-
-function prep_mode ( $value )
-{
-  return MODE::valid( $value ) ? $value : MODE::TEXT;
-}
+////////////////////////////////////////////////////////////////////////////////
 
 function save_cond ( $post_id , $nonce )
 {
@@ -281,15 +567,4 @@ function save_cond ( $post_id , $nonce )
   $valid_nonce = $nonce_value && wp_verify_nonce( $nonce_value , $nonce );
 
   return !$is_autosave && !$is_revision && $valid_nonce;
-}
-
-function make_note ( $note , $class )
-{
-  add_action
-    ( 'admin_notices'
-    , function () use ( $note , $class )
-      {
-        echo "<div class=\"{$class}\">{$note}</div>";
-      }
-    );
 }
