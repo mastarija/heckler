@@ -78,6 +78,76 @@ function init ()
   add_action( 'save_post_heckler' , 'Mastarija\Heckler\save_meta_code' );
 
   add_shortcode( 'heckler' , 'Mastarija\Heckler\make_shortcode' );
+
+  add_filter( 'manage_heckler_posts_columns' , 'Mastarija\Heckler\make_columns' );
+  add_action( 'manage_heckler_posts_custom_column' , 'Mastarija\Heckler\data_columns' , 0 , 2 );
+}
+
+function make_columns ( $columns )
+{
+  $columns[ 'hook' ] = 'Hook';
+  $columns[ 'rule' ] = 'Rule';
+  $columns[ 'mode' ] = 'Mode';
+  $columns[ 'code' ] = 'Code';
+
+  return $columns;
+}
+
+function data_columns ( $column , $post_id )
+{
+  switch ( $column )
+  {
+    case 'rule' :
+      $data =
+        [ 'conf_rule' => prep_bool( load_meta( $post_id , 'mastarija_heckler_conf_rule' , false ) )
+        ];
+
+      load_view_file( 'php/cell_rule.php' , $data );
+      break;
+
+    case 'mode' :
+      $data =
+        [ 'conf_mode' => strtolower( prep_mode( load_meta( $post_id , 'mastarija_heckler_conf_mode' , MODE::TEXT ) ) )
+        ];
+
+      load_view_file( 'php/cell_mode.php' , $data );
+      break;
+
+    case 'hook' :
+      $data = [];
+      $data[ 'conf_hook' ] = prep_bool( load_meta( $post_id , 'mastarija_heckler_conf_hook' , false ) );
+
+      if ( $data[ 'conf_hook' ] )
+      {
+        $hook_list = load_hook_list( $post_id );
+
+        $total  = 0;
+        $active = 0;
+
+        foreach ( $hook_list as $hook_item )
+        {
+          $total++;
+          if ( $hook_item[ 'act' ] )
+          {
+            $active++;
+          }
+        }
+
+        $data[ 'hook_total' ] = $total;
+        $data[ 'hook_active' ] = $active;
+      }
+
+      load_view_file( 'php/cell_hook.php' , $data );
+      break;
+
+    case 'code' :
+      $data =
+        [ 'post_id' => $post_id
+        ];
+
+      load_view_file( 'php/cell_code.php' , $data );
+      break;
+  }
 }
 
 function init_hook_code ()
