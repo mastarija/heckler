@@ -71,6 +71,7 @@ function init ()
 
   add_action( 'add_meta_boxes'    , 'Mastarija\Heckler\make_meta_view' );
 
+
   add_action( 'save_post_heckler' , 'Mastarija\Heckler\save_meta_conf' );
   add_action( 'save_post_heckler' , 'Mastarija\Heckler\save_meta_hook' );
 
@@ -79,8 +80,35 @@ function init ()
 
   add_shortcode( 'heckler' , 'Mastarija\Heckler\make_shortcode' );
 
+  add_action( 'admin_enqueue_scripts' , 'Mastarija\Heckler\load_scripts' );
   add_filter( 'manage_heckler_posts_columns' , 'Mastarija\Heckler\make_columns' );
   add_action( 'manage_heckler_posts_custom_column' , 'Mastarija\Heckler\data_columns' , 0 , 2 );
+}
+
+function load_scripts ()
+{
+  $screen = get_current_screen();
+
+  if ( !$screen || !( $screen->post_type === 'heckler' ) )
+  {
+    return;
+  }
+
+  wp_enqueue_script
+    ( 'heckler_jsc'
+    , plugins_url( 'jsc/heckler.js' , __FILE__ )
+    , [ 'jquery' , 'wp-codemirror' ]
+    , 0
+    , true
+    );
+
+  wp_enqueue_style
+    ( 'heckler_css'
+    , plugins_url( 'css/heckler.css' , __FILE__ )
+    , [ 'wp-codemirror' ]
+    , 0
+    , 'all'
+    );
 }
 
 function make_columns ( $columns )
@@ -102,7 +130,7 @@ function data_columns ( $column , $post_id )
         [ 'conf_rule' => prep_bool( load_meta( $post_id , 'mastarija_heckler_conf_rule' , false ) )
         ];
 
-      load_view_file( 'php/cell_rule.php' , $data );
+      load_view_file( 'tpl/cell_rule.php' , $data );
       break;
 
     case 'mode' :
@@ -110,7 +138,7 @@ function data_columns ( $column , $post_id )
         [ 'conf_mode' => strtolower( prep_mode( load_meta( $post_id , 'mastarija_heckler_conf_mode' , MODE::TEXT ) ) )
         ];
 
-      load_view_file( 'php/cell_mode.php' , $data );
+      load_view_file( 'tpl/cell_mode.php' , $data );
       break;
 
     case 'hook' :
@@ -137,7 +165,7 @@ function data_columns ( $column , $post_id )
         $data[ 'hook_active' ] = $active;
       }
 
-      load_view_file( 'php/cell_hook.php' , $data );
+      load_view_file( 'tpl/cell_hook.php' , $data );
       break;
 
     case 'code' :
@@ -145,7 +173,7 @@ function data_columns ( $column , $post_id )
         [ 'post_id' => $post_id
         ];
 
-      load_view_file( 'php/cell_code.php' , $data );
+      load_view_file( 'tpl/cell_code.php' , $data );
       break;
   }
 }
@@ -358,7 +386,7 @@ function view_meta_conf ( $post )
     , 'conf_mode' => prep_mode( load_meta( $post->ID , 'mastarija_heckler_conf_mode' , MODE::TEXT ) )
     ];
 
-  load_view_file( 'php/view_meta_conf.php' , $data );
+  load_view_file( 'tpl/view_meta_conf.php' , $data );
 }
 
 function save_meta_conf ( $post_id )
@@ -386,7 +414,7 @@ function view_meta_hook ( $post )
     , 'hook_list' => load_hook_list( $post->ID )
     ];
 
-  load_view_file( 'php/view_meta_hook.php' , $data );
+  load_view_file( 'tpl/view_meta_hook.php' , $data );
 }
 
 function save_meta_hook ( $post_id )
@@ -451,7 +479,7 @@ function view_meta_rule ( $post )
     , 'code_rule' => $code_rule
     ];
 
-  load_view_file( 'php/view_meta_rule.php' , $data );
+  load_view_file( 'tpl/view_meta_rule.php' , $data );
 }
 
 function save_meta_rule ( $post_id )
@@ -479,7 +507,7 @@ function view_meta_code ( $post )
     , 'code_code' => $code_code
     ];
 
-  load_view_file( 'php/view_meta_code.php' , $data );
+  load_view_file( 'tpl/view_meta_code.php' , $data );
 }
 
 function save_meta_code ( $post_id )
