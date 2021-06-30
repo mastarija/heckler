@@ -97,7 +97,7 @@ function load_scripts ()
   wp_enqueue_script
     ( 'heckler_jsc'
     , plugins_url( 'jsc/heckler.js' , __FILE__ )
-    , [ 'jquery' , 'wp-codemirror' ]
+    , [ 'jquery' , 'jquery-ui-sortable' , 'wp-codemirror' ]
     , 0
     , true
     );

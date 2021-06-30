@@ -1,8 +1,9 @@
 <?php namespace Mastarija\Heckler; ?>
 
-<table>
+<table id="hook_list">
   <thead>
     <tr>
+      <th></th>
       <th>Tag</th>
       <th>Ord</th>
       <th>Arg</th>
@@ -13,7 +14,11 @@
 
   <tbody>
     <?php foreach ( $hook_list as $i => $hook ): ?>
-    <tr>
+    <tr class="hook_item">
+      <td class="hook_handle">
+
+      </td>
+
       <td>
         <input name="hook_list[<?php echo $i; ?>][tag]" type="text" value="<?php echo $hook[ 'tag' ]; ?>" placeholder="example_hook_name" />
       </td>
@@ -31,13 +36,18 @@
       </td>
 
       <td>
+        <span class="action">x</span>
       </td>
     </tr>
     <?php endforeach ?>
   </tbody>
 
   <tfoot>
-    <tr>
+    <tr class="hook_item">
+      <td class="hook_handle">
+
+      </td>
+
       <td>
         <input name="hook_list[x][tag]" type="text" value="" placeholder="example_hook_name" />
       </td>
@@ -55,6 +65,7 @@
       </td>
 
       <td>
+        <span class="action">x</span>
       </td>
     </tr>
   </tfoot>
