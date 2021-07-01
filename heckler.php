@@ -52,7 +52,7 @@ class TYPE
 class UTIL
 {
   public const PATH = __DIR__;
-  public const HEAD = "<?php if ( !defined( 'ABSPATH' ) ) die( 'direct access not allowed' );\n\n";
+  public const HEAD = "<?php if ( !defined( 'ABSPATH' ) ) die( 'direct access not allowed' );\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

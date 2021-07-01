@@ -1,4 +1,5 @@
 <?php namespace Mastarija\Heckler; ?>
+<?php if ( !defined( 'ABSPATH' ) ) return; ?>
 
 <?php if ( !$conf_hook ): ?>
   <code class="mini-code hook-disabled">Disabled</code>

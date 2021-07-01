@@ -1,9 +1,10 @@
 <?php namespace Mastarija\Heckler; ?>
+<?php if ( !defined( 'ABSPATH' ) ) return; ?>
 
 <table>
   <tr>
     <td colspan="2">
-      <pre>[heckler id="<?php echo $post; ?>"]</pre>
+      <code>[heckler id="<?php echo $post; ?>"]</code>
     </td>
   </tr>
 

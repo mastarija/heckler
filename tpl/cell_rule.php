@@ -1,4 +1,5 @@
 <?php namespace Mastarija\Heckler; ?>
+<?php if ( !defined( 'ABSPATH' ) ) return; ?>
 
 <?php $conf_rule = $conf_rule ? 'enabled' : 'disabled'; ?>
 

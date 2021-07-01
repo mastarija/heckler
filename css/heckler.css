@@ -1,0 +1,222 @@
+.heckler-container
+{
+  margin: -12px;
+  margin-top: -6px;
+}
+
+.heckler-editor header ,
+.heckler-editor footer
+{
+  height: 1.5em;
+  line-height: 1.5em;
+}
+
+.heckler-editor header
+{
+  border-bottom: 1px solid #ddd;
+}
+
+.heckler-editor footer
+{
+  border-top: 1px solid #ddd;
+}
+
+.heckler-editor header pre ,
+.heckler-editor footer pre
+{
+  margin: 0;
+}
+
+.heckler-editor header:before ,
+.heckler-editor footer:before
+{
+  width: 30px;
+  margin-right: 4px;
+  display: block;
+  content: '';
+  box-sizing: border-box;
+  float: left;
+  border-right: 1px solid #ddd;
+  background: #f7f7f7;
+  height: 100%;
+}
+
+/**/
+
+.heckler-table
+{
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.heckler-table th
+{
+  text-align: left;
+}
+
+.heckler-table th ,
+.heckler-table td
+{
+  border: 1px solid #ddd;
+}
+
+.heckler-table th:last-child ,
+.heckler-table td:last-child
+{
+  border-right: none;
+}
+
+.heckler-table th:first-child ,
+.heckler-table td:first-child
+{
+  border-left: none;
+}
+
+.heckler-table > tr:first-child > th ,
+.heckler-table > tr:first-child > td ,
+.heckler-table > *:first-child > tr:first-child > th ,
+.heckler-table > *:first-child > tr:first-child > td
+{
+  border-top: none;
+}
+
+.heckler-table > tr:last-child > th ,
+.heckler-table > tr:last-child > td ,
+.heckler-table > *:last-child > tr:last-child > th ,
+.heckler-table > *:last-child > tr:last-child > td
+{
+  border-bottom: none;
+}
+
+.heckler-table tr:hover
+{
+  background: #f0f0f0;
+}
+
+.heckler-table tr:hover td
+{
+  border-bottom-color: #bbb;
+}
+
+.heckler-table tfoot
+{
+  background: #fafafa;
+}
+
+.heckler-excel
+{
+  line-height: 30px;
+}
+
+.heckler-excel th ,
+.heckler-excel td
+{
+  height: 30px;
+  padding: 0;
+}
+
+.heckler-excel th
+{
+  padding: 0 .5em;
+}
+
+.heckler-excel input[ type='checkbox' ]
+{
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.heckler-excel input[ type='text' ] ,
+.heckler-excel input[ type='number' ]
+{
+  width: 100%;
+  height: 1em;
+
+
+  margin: 0;
+  padding: 0 .5em;
+
+  line-height: 1em;
+
+  border: none;
+  border-radius: 0;
+
+  background: transparent;
+
+  display: block;
+  box-sizing: border-box;
+
+  z-index: 1;
+  position: relative;
+}
+
+.heckler-hook-act
+{
+  text-align: center;
+}
+
+.heckler-hook-hdl ,
+.heckler-hook-ord ,
+.heckler-hook-arg ,
+.heckler-hook-act ,
+.heckler-hook-del
+{
+  width: 4em;
+}
+
+.heckler-hook-del
+{
+  position: relative;
+}
+
+.heckler-hook-del span
+{
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  width: auto;
+  height: auto;
+
+  cursor: pointer;
+
+  display: flex;
+  position: absolute;
+
+  font-family: dashicons;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+
+  background: transparent;
+  transition: 200ms ease all;
+}
+
+
+tbody .heckler-hook-del span:before
+{
+  content : "\f158";
+}
+
+tfoot .heckler-hook-del span:before
+{
+  content : "\f132";
+}
+
+.heckler-hook-hdl
+{
+  cursor: grab;
+  text-align: center;
+}
+
+tbody .heckler-hook-hdl:before
+{
+  content: "\f333";
+  font-family: dashicons;
+}
+
+tfoot .heckler-hook-hdl
+{
+  cursor: unset;
+}
