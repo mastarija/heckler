@@ -1,6 +1,3 @@
-var rule_e = null;
-var code_e = null;
-
 ! function ( $ )
 {
   var htbl = document.getElementById( 'hook_list' )

@@ -475,7 +475,7 @@ function save_meta_hook ( $post_id )
 
     $tag = prep_text( $tag );
     $ord = prep_numb( $ord );
-    $arg = prep_numb( $arg );
+    $arg = prep_natn( $arg );
     $act = prep_bool( $act ) ? 1 : 0;
 
     if ( empty( $tag ) )
@@ -573,7 +573,7 @@ function load_hook_list ( $post_id )
 
     $tag = prep_text( list_data( $hook_item , 0 , ''    ) );
     $ord = prep_numb( list_data( $hook_item , 1 , 0     ) );
-    $arg = prep_numb( list_data( $hook_item , 2 , 0     ) );
+    $arg = prep_natn( list_data( $hook_item , 2 , 0     ) );
     $act = prep_bool( list_data( $hook_item , 3 , false ) );
 
     if ( empty( $tag ) )

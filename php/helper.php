@@ -23,6 +23,11 @@ function post_data ( $name , $dval )
   return is_string( $data ) ? stripcslashes( $data ) : $data;
 }
 
+function prep_natn ( $value )
+{
+  return abs( (int) $value );
+}
+
 function prep_numb ( $value )
 {
   return is_numeric( $value ) ? $value : 0;

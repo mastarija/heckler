@@ -26,11 +26,11 @@
         </td>
 
         <td class="heckler-hook-ord">
-          <input name="hook_list[<?php echo $i; ?>][ord]" type="number" value="<?php echo $hook[ 'ord' ]; ?>" placeholder="0" />
+          <input name="hook_list[<?php echo $i; ?>][ord]" type="number" value="<?php echo $hook[ 'ord' ]; ?>" placeholder="0" step="any" />
         </td>
 
         <td class="heckler-hook-arg">
-          <input name="hook_list[<?php echo $i; ?>][arg]" type="number" value="<?php echo $hook[ 'arg' ]; ?>" placeholder="0" />
+          <input name="hook_list[<?php echo $i; ?>][arg]" type="number" value="<?php echo $hook[ 'arg' ]; ?>" placeholder="0" min="0" step="1" />
         </td>
 
         <td class="heckler-hook-act">
@@ -55,11 +55,11 @@
         </td>
 
         <td class="heckler-hook-ord">
-          <input name="hook_list[x][ord]" type="number" value="" placeholder="0" />
+          <input name="hook_list[x][ord]" type="number" value="" placeholder="0" step="any" />
         </td>
 
         <td class="heckler-hook-arg">
-          <input name="hook_list[x][arg]" type="number" value="" placeholder="0" />
+          <input name="hook_list[x][arg]" type="number" value="" placeholder="0" min="0" step="1" />
         </td>
 
         <td class="heckler-hook-act">
