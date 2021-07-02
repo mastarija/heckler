@@ -7,7 +7,9 @@
       <pre>function rule() {</pre>
     </header>
 
-    <textarea id="code_rule" name="code_rule"><?php echo $code_rule; ?></textarea>
+    <div class="code">
+      <textarea id="code_rule" name="code_rule"><?php echo $code_rule; ?></textarea>
+    </div>
 
     <footer>
       <pre>}</pre>

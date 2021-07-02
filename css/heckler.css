@@ -42,6 +42,14 @@
   height: 100%;
 }
 
+.heckler-editor .code
+{
+  width: 100%;
+  height: auto;
+  position: relative;
+  min-height: 100px;
+}
+
 /**/
 
 .heckler-table

@@ -1,6 +1,7 @@
 <?php
 
 namespace Mastarija\Heckler;
+use Elementor;
 
 /*
   Version: 1.0.0
@@ -69,8 +70,8 @@ function init ()
   add_action( 'init'              , 'Mastarija\Heckler\make_post_type' );
   add_action( 'init'              , 'Mastarija\Heckler\init_hook_code' );
 
-  add_action( 'add_meta_boxes'    , 'Mastarija\Heckler\make_meta_view' );
 
+  add_action( 'add_meta_boxes'    , 'Mastarija\Heckler\make_meta_view' );
 
   add_action( 'save_post_heckler' , 'Mastarija\Heckler\save_meta_conf' );
   add_action( 'save_post_heckler' , 'Mastarija\Heckler\save_meta_hook' );
@@ -80,9 +81,25 @@ function init ()
 
   add_shortcode( 'heckler' , 'Mastarija\Heckler\make_shortcode' );
 
+  add_action( 'current_screen' , 'Mastarija\Heckler\kill_styles' );
   add_action( 'admin_enqueue_scripts' , 'Mastarija\Heckler\load_scripts' );
+
   add_filter( 'manage_heckler_posts_columns' , 'Mastarija\Heckler\make_columns' );
   add_action( 'manage_heckler_posts_custom_column' , 'Mastarija\Heckler\data_columns' , 0 , 2 );
+
+  add_filter( 'elementor/settings/controls/checkbox_list_cpt/post_type_objects' , 'Mastarija\Heckler\elementor' , 100000 );
+}
+
+function kill_styles ()
+{
+  $screen = get_current_screen();
+
+  if ( !$screen || !( $screen->post_type === 'heckler' ) )
+  {
+    return;
+  }
+
+  remove_editor_styles();
 }
 
 function load_scripts ()
@@ -349,6 +366,17 @@ function make_post_type ()
   $name = 'Heckler';
   $slug = 'heckler';
 
+  $caps =
+    [ 'edit_post'          => 'update_core'
+    , 'read_post'          => 'update_core'
+    , 'delete_post'        => 'update_core'
+    , 'edit_posts'         => 'update_core'
+    , 'edit_others_posts'  => 'update_core'
+    , 'delete_posts'       => 'update_core'
+    , 'publish_posts'      => 'update_core'
+    , 'read_private_posts' => 'update_core'
+    ];
+
   $args =
     [ 'label'         => $name
 
@@ -356,9 +384,11 @@ function make_post_type ()
     , 'show_in_menu'  => true
     , 'menu_icon'     => 'dashicons-excerpt-view'
 
-    , 'public'        => false
+    , 'public'        => true
     , 'rewrite'       => false
     , 'supports'      => [ 'title' , 'editor' ]
+    // , 'show_in_rest'  => true
+    , 'capabilities'  => $caps
     ];
 
   register_post_type( $slug , $args );
@@ -576,6 +606,11 @@ function load_view_file ( $file , $data = [] )
 
 function load_code_file ( $file )
 {
+  if ( !file_exists( $file ) )
+  {
+    return false;
+  }
+
   $data = file_get_contents( $file );
 
   if ( strpos( $data , UTIL::HEAD ) !== 0 )
@@ -615,7 +650,7 @@ function make_user_func ( $type , $post_id )
 
 function test_elementor ( $post_id )
 {
-  return did_action( 'elementor\loaded' ) && Elementor\Plugin::$instance->db->is_built_with_elementor( $post_id );
+  return did_action( 'elementor/loaded' ) && Elementor\Plugin::$instance->db->is_built_with_elementor( $post_id );
 }
 
 function make_text_func ( $post_id , $echo = false )
@@ -666,3 +701,31 @@ function save_cond ( $post_id , $nonce )
 
   return !$is_autosave && !$is_revision && $valid_nonce;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+function elementor ( $cpts )
+{
+  $args =
+    [ '_builtin' => false
+    ];
+
+  $type = null;
+
+  foreach ( get_post_types( $args , 'objects' ) as $temp )
+  {
+    if ( $temp->name === 'heckler' )
+    {
+      $type = $temp;
+      break;
+    }
+  }
+
+  if ( !is_null( $type ) )
+  {
+    $cpts[ $type->name ] = $type;
+  }
+
+  return $cpts;
+}
+

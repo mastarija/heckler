@@ -1,3 +1,6 @@
+var rule_e = null;
+var code_e = null;
+
 ! function ( $ )
 {
   var htbl = document.getElementById( 'hook_list' )
@@ -60,6 +63,10 @@
     }
 
     check.addEventListener( 'change' , toggler )
+
+    setTimeout( editor.refresh , 5000 )
+
+    editor.refresh()
 
     return editor
   }

@@ -7,7 +7,9 @@
       <pre>function code( ...$args ) {</pre>
     </header>
 
-    <textarea id="code_code" name="code_code"><?php echo $code_code; ?></textarea>
+    <div class="code">
+      <textarea id="code_code" name="code_code"><?php echo $code_code; ?></textarea>
+    </div>
 
     <footer>
       <pre>}</pre>
