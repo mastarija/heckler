@@ -11,6 +11,10 @@
 
     <footer>
       <pre>}</pre>
+      <div class="vim-enabler">
+        <input id="vim-rule" type="checkbox" />
+        <label for="vim-rule"></label>
+      </div>
     </footer>
   </div>
 </div>

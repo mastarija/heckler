@@ -3,8 +3,8 @@
   var htbl = document.getElementById( 'hook_list' )
   var list = htbl.getElementsByTagName( 'tbody' )[ 0 ]
 
-  var rule = editor( document.getElementById( 'code_rule' ) )
-  var code = editor( document.getElementById( 'code_code' ) )
+  var rule = editor( document.getElementById( 'code_rule' ) , 'rule' )
+  var code = editor( document.getElementById( 'code_code' ) , 'code' )
 
   var opts =
     { stop : ( e , u ) => { renumb( list ) }
@@ -29,15 +29,39 @@
     renumb( list )
   }
 
-  function editor ( $elem )
+  function editor ( $elem , $type )
   {
+    var vimm = cookie( $type + '_vim' ) === 'true'
+
     var opts =
       { mode : 'text/x-php'
       , lineNumbers : true
       , firstLineNumber : 2
+      , keyMap : vimm ? 'vim' : 'default'
       }
 
-    return wp.CodeMirror.fromTextArea( $elem , opts )
+    var check = document.getElementById( 'vim-' + $type )
+        check.checked = vimm
+
+    var editor = wp.CodeMirror.fromTextArea( $elem , opts )
+
+    var toggler = function ( e )
+    {
+      if ( this.checked )
+      {
+        editor.setOption( 'keyMap' , 'vim' )
+        cookie( $type + '_vim' , 'true' )
+      }
+      else
+      {
+        editor.setOption( 'keyMap' , 'default' )
+        cookie( $type + '_vim' , 'false' )
+      }
+    }
+
+    check.addEventListener( 'change' , toggler )
+
+    return editor
   }
 
   function renumb ( $htbl )

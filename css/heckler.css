@@ -18,6 +18,7 @@
 
 .heckler-editor footer
 {
+  position: relative;
   border-top: 1px solid #ddd;
 }
 
@@ -219,4 +220,42 @@ tbody .heckler-hook-hdl:before
 tfoot .heckler-hook-hdl
 {
   cursor: unset;
+}
+
+/**/
+
+.vim-enabler
+{
+  top: 0;
+  right: 1em;
+  bottom: 0;
+  position: absolute;
+  display: flex;
+}
+
+.vim-enabler input
+{
+  display: none;
+}
+
+.vim-enabler label
+{
+  font-size: 1em;
+  text-transform: uppercase;
+}
+
+.vim-enabler label:before
+{
+  display: inline;
+  content: 'Mode : Normal';
+}
+
+.vim-enabler input:checked + label
+{
+  font-weight: bold;
+}
+
+.vim-enabler input:checked + label:before
+{
+  content: 'Mode : VIM';
 }
