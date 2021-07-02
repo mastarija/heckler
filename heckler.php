@@ -86,8 +86,6 @@ function init ()
 
   add_filter( 'manage_heckler_posts_columns' , 'Mastarija\Heckler\make_columns' );
   add_action( 'manage_heckler_posts_custom_column' , 'Mastarija\Heckler\data_columns' , 0 , 2 );
-
-  add_filter( 'elementor/settings/controls/checkbox_list_cpt/post_type_objects' , 'Mastarija\Heckler\elementor' , 100000 );
 }
 
 function kill_styles ()
@@ -387,7 +385,7 @@ function make_post_type ()
     , 'public'        => true
     , 'rewrite'       => false
     , 'supports'      => [ 'title' , 'editor' ]
-    // , 'show_in_rest'  => true
+    , 'show_in_rest'  => false // TODO : maybe in the future
     , 'capabilities'  => $caps
     ];
 
@@ -701,31 +699,3 @@ function save_cond ( $post_id , $nonce )
 
   return !$is_autosave && !$is_revision && $valid_nonce;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-function elementor ( $cpts )
-{
-  $args =
-    [ '_builtin' => false
-    ];
-
-  $type = null;
-
-  foreach ( get_post_types( $args , 'objects' ) as $temp )
-  {
-    if ( $temp->name === 'heckler' )
-    {
-      $type = $temp;
-      break;
-    }
-  }
-
-  if ( !is_null( $type ) )
-  {
-    $cpts[ $type->name ] = $type;
-  }
-
-  return $cpts;
-}
-
