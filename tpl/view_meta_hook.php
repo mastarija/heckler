@@ -22,19 +22,19 @@
         </td>
 
         <td class="heckler-hook-tag">
-          <input name="hook_list[<?php echo $i; ?>][tag]" type="text" value="<?php echo $hook[ 'tag' ]; ?>" placeholder="example_hook_name" />
+          <input name="hook_list[<?php echo esc_attr( $i ); ?>][tag]" type="text" value="<?php echo esc_attr( $hook[ 'tag' ] ); ?>" placeholder="example_hook_name" />
         </td>
 
         <td class="heckler-hook-ord">
-          <input name="hook_list[<?php echo $i; ?>][ord]" type="number" value="<?php echo $hook[ 'ord' ]; ?>" placeholder="0" step="any" />
+          <input name="hook_list[<?php echo esc_attr( $i ); ?>][ord]" type="number" value="<?php echo esc_attr( $hook[ 'ord' ] ); ?>" placeholder="0" step="any" />
         </td>
 
         <td class="heckler-hook-arg">
-          <input name="hook_list[<?php echo $i; ?>][arg]" type="number" value="<?php echo $hook[ 'arg' ]; ?>" placeholder="0" min="0" step="1" />
+          <input name="hook_list[<?php echo esc_attr( $i ); ?>][arg]" type="number" value="<?php echo esc_attr( $hook[ 'arg' ] ); ?>" placeholder="0" min="0" step="1" />
         </td>
 
         <td class="heckler-hook-act">
-          <input name="hook_list[<?php echo $i; ?>][act]" type="checkbox" <?php echo $hook[ 'act' ] === true ? 'checked' : ''; ?> />
+          <input name="hook_list[<?php echo esc_attr( $i ); ?>][act]" type="checkbox" <?php echo $hook[ 'act' ] === true ? 'checked' : ''; ?> />
         </td>
 
         <td class="heckler-hook-del">

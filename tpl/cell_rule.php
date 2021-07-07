@@ -3,4 +3,4 @@
 
 <?php $conf_rule = $conf_rule ? 'enabled' : 'disabled'; ?>
 
-<code class="mini-code rule-<?php echo $conf_rule; ?>"><?php echo ucfirst( $conf_rule ); ?></code>
+<code class="mini-code rule-<?php echo esc_attr( $conf_rule ); ?>"><?php echo esc_html( ucfirst( $conf_rule ) ); ?></code>

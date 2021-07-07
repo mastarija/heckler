@@ -8,7 +8,7 @@
     </header>
 
     <div class="code">
-      <textarea id="code_rule" name="code_rule"><?php echo $code_rule; ?></textarea>
+      <textarea id="code_rule" name="code_rule"><?php echo esc_textarea($code_rule); ?></textarea>
     </div>
 
     <footer>

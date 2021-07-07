@@ -185,7 +185,7 @@ function data_columns ( $column , $post_id )
 
     case 'code' :
       $data =
-        [ 'post_id' => $post_id
+        [ 'post_id' => prep_numb( $post_id , 0 )
         ];
 
       load_view_file( 'tpl/cell_code.php' , $data );
@@ -195,6 +195,11 @@ function data_columns ( $column , $post_id )
 
 function init_hook_code ()
 {
+  if ( is_admin() )
+  {
+    return;
+  }
+
   $qargs =
     [ 'post_type' => 'heckler'
     , 'post_status' => 'publish'
@@ -290,7 +295,7 @@ function make_shortcode ( $att , $con , $tag )
 
   $att = shortcode_atts( $def , $att , $tag );
 
-  $id = trim( $att[ 'id' ] );
+  $id   = trim( $att[ 'id' ] );
   $name = trim( $att[ 'name' ] );
   $data = trim( $att[ 'data' ] );
 
@@ -419,9 +424,9 @@ function view_meta_conf ( $post )
 
 function save_meta_conf ( $post_id )
 {
-  $conf_hook = prep_bool( post_data( 'conf_hook' , false ) );
-  $conf_rule = prep_bool( post_data( 'conf_rule' , false ) );
-  $conf_mode = prep_mode( post_data( 'conf_mode' , MODE::TEXT ) );
+  $conf_hook = sanitize_meta( 'mastarija_heckler_conf_hook' , prep_bool( post_data( 'conf_hook' , false ) ) , 'heckler' );
+  $conf_rule = sanitize_meta( 'mastarija_heckler_conf_rule' , prep_bool( post_data( 'conf_rule' , false ) ) , 'heckler' );
+  $conf_mode = sanitize_meta( 'mastarija_heckler_conf_rule' , prep_mode( post_data( 'conf_mode' , MODE::TEXT ) ) , 'heckler' );
 
   if ( !save_cond( $post_id , 'nonc_mastarija_heckler_save_meta_conf' ) )
   {
@@ -437,6 +442,14 @@ function save_meta_conf ( $post_id )
 
 function view_meta_hook ( $post )
 {
+  $hook_list = load_hook_list( $post->ID );
+
+  // escape hook_list data for use in value attributes
+  foreach ( $hook_list as $i => $hook_item )
+  {
+    $hook_list[ $i ] = array_map( 'esc_attr' , $hook_item );
+  }
+
   $data =
     [ 'nonc'      => make_nonc( 'nonc_mastarija_heckler_save_meta_hook' )
     , 'hook_list' => load_hook_list( $post->ID )
@@ -473,7 +486,7 @@ function save_meta_hook ( $post_id )
       return;
     }
 
-    $tag = prep_text( $tag );
+    $tag = sanitize_text_field( $tag );
     $ord = prep_numb( $ord );
     $arg = prep_natn( $arg );
     $act = prep_bool( $act ) ? 1 : 0;
@@ -491,7 +504,10 @@ function save_meta_hook ( $post_id )
     $hook_list_meta[] = implode( ':' , [ $tag , $ord , $arg , $act ] );
   }
 
-  update_post_meta( $post_id , 'mastarija_heckler_hook_list' , trim( implode( ';' , $hook_list_meta ) ) );
+  $hook_list_meta = trim( implode( ';' , $hook_list_meta ) ) ;
+  $hook_list_meta = sanitize_meta( 'mastarija_heckler_hook_list' , $hook_list_meta , 'heckler' );
+
+  update_post_meta( $post_id , 'mastarija_heckler_hook_list' , $hook_list_meta );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -499,7 +515,7 @@ function save_meta_hook ( $post_id )
 function view_meta_rule ( $post )
 {
   $code_rule = load_code_file( make_path( "/usr/rule_{$post->ID}.php" ) );
-  $code_rule = $code_rule === false ? '' : htmlspecialchars( $code_rule );
+  $code_rule = $code_rule === false ? '' : $code_rule;
 
   $data =
     [ 'post'      => $post->ID
@@ -527,7 +543,7 @@ function save_meta_rule ( $post_id )
 function view_meta_code ( $post )
 {
   $code_code = load_code_file( make_path( "/usr/code_{$post->ID}.php" ) );
-  $code_code = $code_code === false ? '' : htmlspecialchars( $code_code );
+  $code_code = $code_code === false ? '' : $code_code;
 
   $data =
     [ 'post'      => $post->ID
@@ -571,7 +587,7 @@ function load_hook_list ( $post_id )
   {
     $hook_item = explode( ':' , $hook_item );
 
-    $tag = prep_text( list_data( $hook_item , 0 , ''    ) );
+    $tag = sanitize_text_field( list_data( $hook_item , 0 , ''    ) );
     $ord = prep_numb( list_data( $hook_item , 1 , 0     ) );
     $arg = prep_natn( list_data( $hook_item , 2 , 0     ) );
     $act = prep_bool( list_data( $hook_item , 3 , false ) );

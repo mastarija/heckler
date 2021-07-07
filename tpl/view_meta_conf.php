@@ -4,7 +4,7 @@
 <table>
   <tr>
     <td colspan="2">
-      <code>[heckler id="<?php echo $post; ?>"]</code>
+      <code>[heckler id="<?php echo esc_html( $post ); ?>"]</code>
     </td>
   </tr>
 

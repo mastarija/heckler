@@ -19,13 +19,13 @@ function list_data ( $list , $name , $dval )
 
 function post_data ( $name , $dval )
 {
-  $data =  list_data( $_POST , $name , $dval );
+  $data = list_data( $_POST , $name , $dval );
   return is_string( $data ) ? stripcslashes( $data ) : $data;
 }
 
 function prep_natn ( $value )
 {
-  return abs( (int) $value );
+  return abs( (int) prep_numb( $value ));
 }
 
 function prep_numb ( $value )
