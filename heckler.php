@@ -711,11 +711,13 @@ function make_post_html( $post_id )
 
 function save_cond ( $post_id , $nonce )
 {
-  $nonce_value = post_data( $nonce , false );
-
   $is_autosave = wp_is_post_autosave( $post_id );
   $is_revision = wp_is_post_revision( $post_id );
-  $valid_nonce = $nonce_value && wp_verify_nonce( $nonce_value , $nonce );
 
-  return !$is_autosave && !$is_revision && $valid_nonce;
+  $edits_right = current_user_can( 'edit_plugins' );
+  $files_right = current_user_can( 'upload_files' );
+
+  $valid_nonce = wp_verify_nonce( post_data( $nonce , false ) , $nonce );
+
+  return !$is_autosave && !$is_revision && $valid_nonce && $files_right && $edits_right;
 }
