@@ -528,7 +528,7 @@ function view_meta_rule ( $post )
 
 function save_meta_rule ( $post_id )
 {
-  $code_rule = post_data( 'code_rule' , '' );
+  $code_rule = htmlspecialchars( post_data( 'code_rule' , '' ) );
 
   if ( !save_cond( $post_id , 'nonc_mastarija_heckler_save_meta_rule' ) )
   {
@@ -556,7 +556,7 @@ function view_meta_code ( $post )
 
 function save_meta_code ( $post_id )
 {
-  $code_code = post_data( 'code_code' , '' );
+  $code_code = htmlspecialchars( post_data( 'code_code' , '' ) );
 
   if ( !save_cond( $post_id , 'nonc_mastarija_heckler_save_meta_code' ) )
   {
@@ -568,8 +568,14 @@ function save_meta_code ( $post_id )
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function make_nonc ( $name )
+function make_nonc ( $name , $echo = false )
 {
+  if ( $echo )
+  {
+    wp_nonce_field( $name , $name , true , true );
+    return;
+  }
+
   return wp_nonce_field( $name , $name , true , false );
 }
 
@@ -637,7 +643,7 @@ function load_code_file ( $file )
 
 function save_code_file ( $file , $data = '' )
 {
-  file_put_contents( $file , UTIL::HEAD . $data );
+  file_put_contents( $file , UTIL::HEAD . htmlspecialchars_decode( $data ) );
 }
 
 function make_user_func ( $type , $post_id )
@@ -669,8 +675,6 @@ function test_elementor ( $post_id )
 
 function make_text_func ( $post_id , $echo = false )
 {
-  $text = '';
-
   $stat = get_post_status( $post_id );
 
   if ( !$stat )
@@ -678,29 +682,29 @@ function make_text_func ( $post_id , $echo = false )
     return false;
   }
 
-  if ( test_elementor( $post_id ) )
-  {
-    $text = Elementor\Plugin::$instance->frontend->get_builder_content_for_display( $post_id , false );
-  }
-
-  else
-  {
-
-    $text = apply_filters( 'the_content' , get_the_content( null , false , $post_id ) );
-  }
-
   if ( $echo )
   {
-    return function ( ...$args ) use ( $text )
+    return function ( ...$args ) use ( $post_id )
     {
-      echo $text;
+      echo make_post_html( $post_id );
     };
   }
 
-  return function ( ...$args ) use ( $text )
+  return function ( ...$args ) use ( $post_id )
   {
-    return $text;
+    return make_post_html( $post_id );
   };
+}
+
+function make_post_html( $post_id )
+{
+  if ( test_elementor( $post_id ) )
+  {
+    return Elementor\Plugin::$instance->frontend->get_builder_content_for_display( $post_id , false );
+  }
+
+  // TODO : check why wpautop is not applied, maybe default theme 2021 does something?
+  return wpautop( apply_filters( 'the_content' , get_the_content( null , false , $post_id ) ) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -20,4 +20,6 @@
     </footer>
   </div>
 </div>
-<?php echo $nonc; ?>
+
+<?php // echo esc_html( $nonc ); ?>
+<?php make_nonc( 'nonc_mastarija_heckler_save_meta_code' , true ); ?>

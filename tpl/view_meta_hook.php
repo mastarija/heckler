@@ -73,5 +73,6 @@
     </tfoot>
   </table>
 
-  <?php echo $nonc; ?>
+  <?php // echo esc_html( $nonc ); ?>
+  <?php make_nonc( 'nonc_mastarija_heckler_save_meta_hook' , true ); ?>
 </div>

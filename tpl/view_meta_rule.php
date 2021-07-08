@@ -8,7 +8,7 @@
     </header>
 
     <div class="code">
-      <textarea id="code_rule" name="code_rule"><?php echo esc_textarea($code_rule); ?></textarea>
+      <textarea id="code_rule" name="code_rule"><?php echo esc_textarea( $code_rule ); ?></textarea>
     </div>
 
     <footer>
@@ -21,4 +21,5 @@
   </div>
 </div>
 
-<?php echo $nonc; ?>
+<?php // echo esc_html( $nonc ); ?>
+<?php make_nonc( 'nonc_mastarija_heckler_save_meta_rule' , true ); ?>
