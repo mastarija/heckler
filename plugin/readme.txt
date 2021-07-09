@@ -38,7 +38,7 @@ This plugin stores code snippets in the plugin subfolder `usr` and text snippets
 
 During the WordPress `init` phase, the plugin checks for all defined snippets that have defined hooks, and if the `rule` returns true, it hooks the code (loaded from the `usr` folder) or the text to the defined hooks.
 
-In case a snippet is used as a widget, before the widget is executed the `rule` is checked, and if it passes, only then is the text rendered or the code executed.
+In case a snippet is used as a shortcode, before the shortcode is executed the `rule` is checked, and if it passes, only then is the text rendered or the code executed.
 
 = How is this not a security hazard? =
 
@@ -50,8 +50,10 @@ If this is still too much of a risk for you, then this plugin might not be for y
 
 == Screenshots ==
 
-1. Heckler snippet edit page.
-2. Default snippet content editor with elementor support.
-3. A rule editor used to define the snippet display rule.
-4. A code editor used to define a custom code snippet to execute on hooks or on shortcode call site.
-5. A list of hook definitions where you can define hooks to which you want to hook your snippet, number of arguments your code snippet takes, and priority / sort number.
+1. Simple text editor content, with Elementor support.
+2. Hook list used to define hooks on which to display your content, priority, number of arguments (if you are using Code) and if this hook is active or inactive.
+3. Content displayed on the `wp_footer` hook.
+4. A Rule editor with VIM support.
+5. A Code editor with VIM support.
+6. Heckler shortcode embedded into the content.
+7. Output of a Heckler shortcode content generated through a Code script.
