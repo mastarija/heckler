@@ -47,6 +47,6 @@ jobs:
 
         svn status
 
-        svn cp "trunk" "trunk/$GTAG"
+        svn cp "trunk" "tags/$GTAG"
 
         svn status
