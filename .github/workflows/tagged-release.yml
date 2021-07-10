@@ -3,8 +3,7 @@ name: Tagged Release
 on:
   push:
     tags:
-      - '*'
-    branches: active
+      - test-*
 
 jobs:
   trunk:
