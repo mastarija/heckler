@@ -1,0 +1,40 @@
+name: SVN Trunk
+
+on:
+  push:
+    branches:
+      - active
+
+jobs:
+  trunk:
+    runs-on: ubuntu-latest
+    steps:
+    - name: SVN
+      run : sudo apt-get install subversion
+
+    - name: Prepare GIT Heckler
+      uses: actions/checkout@v2
+      with:
+        ref: active
+        path: git-heckler/
+
+    - name: Prepare SVN Heckler
+      run : |
+        mkdir svn-heckler/
+        svn co https://plugins.svn.wordpress.org/heckler svn-heckler
+
+    - name: GIT → SVN
+      run : |
+        rm -r svn-heckler/assets/*
+        rm -r svn-heckler/trunk/*
+
+        cp git-heckler/assets/* svn-heckler/assets/
+        cp git-heckler/plugin/* svn-heckler/trunk/
+
+    - name: SVN → WordPress
+      run : |
+        cd svn-heckler/
+        svn add assets/*
+        svn add trunk/*
+
+
