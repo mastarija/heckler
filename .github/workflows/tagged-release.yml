@@ -6,16 +6,13 @@ on:
       - test-*
 
 jobs:
-  trunk:
+  publish:
     runs-on: ubuntu-latest
     steps:
     - name: TAG
       run : |
-        export GTAG=$(echo $GITHUB_REF | sed -e "s/refs\/tags\///g")
+        export GTAG=$(echo $GITHUB_REF | sed -e "s/refs\/tags\/test-//g")
         echo "GTAG=$(printf '%q' $GTAG)" >> $GITHUB_ENV
-
-    - name: TAG TEST
-      run : echo $GTAG
 
     - name: SVN
       run : sudo apt-get install subversion
@@ -39,11 +36,17 @@ jobs:
         cp -r git-heckler/assets/* svn-heckler/assets/
         cp -r git-heckler/plugin/* svn-heckler/trunk/
 
-        sed "s/{{tag}}/$GTAG/g" git-heckler/readme.tpl > svn-heckler/trunk/readme.txt
+        sed "s/{{TAG}}/$GTAG/g" git-heckler/readme.tpl > svn-heckler/trunk/readme.txt
+        cat svn-heckler/trunk/readme.txt
 
     - name: SVN → WordPress
       run : |
         cd svn-heckler/
-        svn add --force assets/*
-        svn add --force trunk/*
-        head trunk/readme.txt
+        svn add --force assets/* > /dev/null
+        svn add --force trunk/* > /dev/null
+
+        svn status
+
+        svn cp "trunk" "trunk/$GTAG"
+
+        svn status
