@@ -34,7 +34,7 @@ jobs:
     - name: SVN → WordPress
       run : |
         cd svn-heckler/
-        svn add assets/*
-        svn add trunk/*
+        svn add --force assets/*
+        svn add --force trunk/*
 
 
