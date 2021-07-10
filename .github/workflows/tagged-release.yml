@@ -9,7 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: VAR
-      run : export MVAR='Hello from MVAR'
+      run : |
+        export MVAR='Hello from MVAR'
+        echo $MVAR
+        echo 'Hello Test'
 
     - name: VAR TEST
       run : echo $MVAR
