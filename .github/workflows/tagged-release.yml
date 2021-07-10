@@ -3,15 +3,16 @@ name: Tagged Release
 on:
   push:
     tags:
-      - test-*
+      - 'release-[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   publish:
+    name: Publish to WordPress plugin repository
     runs-on: ubuntu-latest
     steps:
     - name: TAG
       run : |
-        export GTAG=$(echo $GITHUB_REF | sed -e "s/refs\/tags\/test-//g")
+        export GTAG=$(echo $GITHUB_REF | sed -e "s/refs\/tags\/release-//g")
         echo "GTAG=$(printf '%q' $GTAG)" >> $GITHUB_ENV
 
     - name: SVN
@@ -40,13 +41,15 @@ jobs:
         cat svn-heckler/trunk/readme.txt
 
     - name: SVN → WordPress
+      env :
+        SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+        SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
       run : |
         cd svn-heckler/
+
         svn add --force assets/* > /dev/null
         svn add --force trunk/* > /dev/null
 
-        svn status
-
         svn cp "trunk" "tags/$GTAG"
 
-        svn status
+        svn commit -m "GIT → SVN [$GTAG]" --no-auth-cache --non-interactive --username "$SVN_USERNAME" --password "$SVN_PASSWORD"
