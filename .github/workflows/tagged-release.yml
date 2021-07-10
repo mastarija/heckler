@@ -2,26 +2,20 @@ name: Tagged Release
 
 on:
   push:
+    # tags: [1-9]+.[0-9]+.[0-9]+
     branches: active
 
 jobs:
   trunk:
     runs-on: ubuntu-latest
     steps:
-    - name: VAR
+    - name: TAG
       run : |
-        export MVAR='Hello from MVAR'
-        echo $MVAR
-        echo 'Hello Test'
+        export GTAG=$(echo $GITHUB_REF | sed -e "s/refs\/tags\///g")
+        echo "GTAG='Hello world!'" >> $GITHUB_ENV
 
-    - name: VAR TEST
-      run : echo $MVAR
-    # - name: TAG
-    #   run : export GTAG=$(echo $GITHUB_REF | sed -e "s/refs\/tags\///g")
-
-    # - name: TAG TEST
-    #   run : echo $GTAG
-
+    - name: TAG TEST
+      run : echo $GTAG
 
     # - name: SVN
     #   run : sudo apt-get install subversion
