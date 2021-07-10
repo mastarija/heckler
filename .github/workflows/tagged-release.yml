@@ -2,7 +2,8 @@ name: Tagged Release
 
 on:
   push:
-    tags: test-*
+    tags:
+      - '*'
     branches: active
 
 jobs:
