@@ -1,0 +1,51 @@
+name: Tagged Release
+
+on:
+  push:
+    branches: active
+
+jobs:
+  trunk:
+    runs-on: ubuntu-latest
+    steps:
+    - name: VAR
+      run : export MVAR='Hello from MVAR'
+
+    - name: VAR TEST
+      run : echo $MVAR
+    # - name: TAG
+    #   run : export GTAG=$(echo $GITHUB_REF | sed -e "s/refs\/tags\///g")
+
+    # - name: TAG TEST
+    #   run : echo $GTAG
+
+
+    # - name: SVN
+    #   run : sudo apt-get install subversion
+
+    # - name: Prepare GIT Heckler
+    #   uses: actions/checkout@v2
+    #   with:
+    #     ref: active
+    #     path: git-heckler/
+
+    # - name: Prepare SVN Heckler
+    #   run : |
+    #     mkdir svn-heckler/
+    #     svn co https://plugins.svn.wordpress.org/heckler svn-heckler
+
+    # - name: GIT → SVN
+    #   run : |
+    #     rm -r svn-heckler/assets/*
+    #     rm -r svn-heckler/trunk/*
+
+    #     cp -r git-heckler/assets/* svn-heckler/assets/
+    #     cp -r git-heckler/plugin/* svn-heckler/trunk/
+
+    #     sed "s/{{tag}}/$GTAG/g" git-heckler/readme.tpl > svn-heckler/trunk/readme.txt
+
+    # - name: SVN → WordPress
+    #   run : |
+    #     cd svn-heckler/
+    #     svn add --force assets/*
+    #     svn add --force trunk/*
