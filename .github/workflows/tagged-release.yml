@@ -37,8 +37,8 @@ jobs:
         cp -r git-heckler/assets/* svn-heckler/assets/
         cp -r git-heckler/plugin/* svn-heckler/trunk/
 
-        sed "s/{{TAG}}/$GTAG/g" git-heckler/readme.tpl > svn-heckler/trunk/readme.txt
-        cat svn-heckler/trunk/readme.txt
+        sed -e "s/{{TAG}}/$GTAG/g" git-heckler/readme.tpl > svn-heckler/trunk/readme.txt
+        sed -i "s/{{TAG}}/$GTAG/g" svn-heckler/trunk/heckler.php
 
     - name: SVN → WordPress
       env :

@@ -4,7 +4,7 @@ namespace Mastarija\Heckler;
 use Elementor;
 
 /*
-  Version: 0.0.0
+  Version: {{TAG}}
 
   Author: Maštarija
   Author URI: https://mastarija.com
